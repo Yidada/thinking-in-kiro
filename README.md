@@ -1,6 +1,34 @@
 # Thinking-in-Kiro
 
-A Model Context Protocol (MCP) server that implements structured development flow rules.
+A powerful Model Context Protocol (MCP) server that implements a structured 10-step development workflow, designed to streamline project development with automated documentation generation and user confirmation mechanisms.
+
+## Quick Start
+
+```bash
+# Run directly with npx (recommended)
+npx thinking-in-kiro
+
+# Or install globally
+npm install -g thinking-in-kiro
+thinking-in-kiro
+```
+
+Then configure your MCP client (Claude Desktop, VS Code, etc.) to use the server.
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Development Flow](#development-flow)
+- [Available Tools](#available-tools)
+- [Example Usage](#example-usage)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
+- [Architecture](#architecture)
+- [License](#license)
 
 ## Features
 
@@ -9,12 +37,6 @@ A Model Context Protocol (MCP) server that implements structured development flo
 - ✅ User confirmation synchronization mechanism
 - ✅ Task completion tracking with strikethrough
 - ✅ Project organization with dated directories (.dev/YYYYMMDD_HHMM/)
-
-## Installation
-
-```bash
-npm install thinking-in-kiro
-```
 
 ## Installation
 
@@ -36,7 +58,7 @@ thinking-in-kiro
 
 ```bash
 # Clone and build locally
-git clone <repository-url>
+git clone https://github.com/your-username/thinking-in-kiro.git
 cd thinking-in-kiro
 npm install
 npm run build
@@ -102,13 +124,15 @@ The server implements a 10-step structured development process:
 
 ## Available Tools
 
-- `init_dev_flow` - Initialize development flow
-- `generate_requirement` - Generate requirements document
-- `wait_user_confirmation` - Wait for user confirmation
-- `generate_design` - Generate design document
-- `generate_todo` - Generate task list
-- `mark_task_complete` - Mark task as completed
-- `generate_completion` - Generate completion report
+The server provides a unified `development_flow` tool that supports the following actions:
+
+- `init` - Initialize development flow with project setup
+- `requirement` - Generate requirements document with detailed analysis
+- `confirmation` - Handle user confirmation for each phase
+- `design` - Generate design document based on requirements
+- `todo` - Generate task list with breakdown and priorities
+- `task_complete` - Mark individual tasks as completed
+- `finish` - Generate completion report and finalize project
 
 ## Example Usage
 
@@ -116,15 +140,16 @@ Here's a complete example of using the development flow:
 
 ### 1. Initialize Project
 ```
-Call: init_dev_flow
-Input: { "projectName": "my-awesome-app" }
+Call: development_flow
+Input: { "action": "init", "projectName": "my-awesome-app" }
 Result: Creates .dev/20250120_1430/ directory
 ```
 
 ### 2. Generate Requirements
 ```
-Call: generate_requirement
+Call: development_flow
 Input: {
+  "action": "requirement",
   "description": "A web application for task management",
   "requirements": ["User authentication", "Task CRUD operations", "Real-time updates"]
 }
@@ -133,12 +158,12 @@ Result: Creates requirement.md
 
 ### 3. Confirm Requirements
 ```
-Call: wait_user_confirmation
-Input: { "phase": "requirement" }
+Call: development_flow
+Input: { "action": "confirmation", "phase": "requirement" }
 Result: Returns confirmation request
 
-Call: wait_user_confirmation  
-Input: { "phase": "requirement", "confirmed": true }
+Call: development_flow
+Input: { "action": "confirmation", "phase": "requirement", "confirmed": true }
 Result: Requirement phase confirmed
 ```
 
@@ -212,4 +237,4 @@ MIT
 
 ---
 
-*Built with reference to the sequential thinking MCP server architecture.* 
+*Built with reference to the sequential thinking MCP server architecture.*
