@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+1. PUT test code under test/ folder
+2. PUT source code under src/ folder
+3. Always Keep single README.md
