@@ -1,14 +1,26 @@
-每次开发的时候需要遵循以下步骤：
-1. 在根目录的.dev下用一个日期+数字编号子文件夹来存储当前开发的过程文件.
-2. 生成一个requirement.md文档来分析当前用户的需求。
-  - 如果当前任务上下文有缺失的情况下需要主动联系用户确认需求.
-3. 同步用户当前需求分析，等待用户检查需求理解细节的正确与否，用户确认执行后再进行下一步(用户没有明确同意的情况下不允许进行下一步).
-4. 生成一个design.md 文档基于用户的需求制定技术方案.
-5. 同步用户当前设计方案，等待用户检查设计方案，用户确认执行后再进行下一步(用户没有明确同意的情况下不允许进行下一步).
-6. 基于design.md 文档成一个todo.md文档来清晰的列出将要如何实现技术方案中的任务.
-7. 同步用户当前todo.md文档，等待用户检查todo.md文档，用户确认执行后再进行下一步(用户没有明确同意的情况下不允许进行下一步).
-8. 按顺序逐个执行todo.md文档中的任务
-  - 如果任务执行过程中遇到问题需要联系用户确认任务是否正确.
-  - 当任务执行完成后借助删除线标记当前任务已完成.
-9. 当所有todo.md文档中的任务都完成后，在.dev目录下面生成一个done.md文档来清晰的列出所有完成的任务.
-10. 通知用户所有任务都完成了.
+# Development Process Steps
+
+Follow these steps for each development task:
+
+1. Create a subfolder in the root `.dev` directory using date + number format to store current development process files.
+
+2. Generate a `requirement.md` document to analyze user requirements.
+  - Proactively contact user to confirm requirements if current task context is incomplete.
+
+3. Sync requirement analysis with user and wait for their review of requirement details. Only proceed after explicit user confirmation (do not proceed without clear user agreement).
+
+4. Create a `design.md` document to establish technical solution based on user requirements.
+
+5. Sync design proposal with user and wait for their review. Only proceed after explicit user confirmation (do not proceed without clear user agreement).
+
+6. Based on `design.md`, create a `todo.md` document that clearly lists how to implement tasks from the technical solution.
+
+7. Sync `todo.md` with user and wait for their review. Only proceed after explicit user confirmation (do not proceed without clear user agreement).
+
+8. Execute tasks in `todo.md` sequentially:
+  - Contact user to verify task correctness if issues arise during execution
+  - Mark completed tasks using strikethrough formatting
+
+9. After completing all tasks in `todo.md`, generate a `done.md` document in the `.dev` directory that clearly lists all completed tasks.
+
+10. Notify user that all tasks have been completed.

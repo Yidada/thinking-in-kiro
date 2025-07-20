@@ -1,17 +1,29 @@
 ---
 alwaysApply: true
 ---
-每次开发的时候需要遵循以下步骤：
-1. 在根目录的.dev下用一个日期+数字编号子文件夹来存储当前开发的过程文件.
-2. 生成一个requirement.md文档来分析当前用户的需求。
-  - 如果当前任务上下文有缺失的情况下需要主动联系用户确认需求.
-3. 同步用户当前需求分析，等待用户检查需求理解细节的正确与否，用户确认执行后再进行下一步(用户没有明确同意的情况下不允许进行下一步).
-4. 生成一个design.md 文档基于用户的需求制定技术方案.
-5. 同步用户当前设计方案，等待用户检查设计方案，用户确认执行后再进行下一步(用户没有明确同意的情况下不允许进行下一步).
-6. 基于design.md 文档成一个todo.md文档来清晰的列出将要如何实现技术方案中的任务.
-7. 同步用户当前todo.md文档，等待用户检查todo.md文档，用户确认执行后再进行下一步(用户没有明确同意的情况下不允许进行下一步).
-8. 按顺序逐个执行todo.md文档中的任务
-  - 如果任务执行过程中遇到问题需要联系用户确认任务是否正确.
-  - 当任务执行完成后借助删除线标记当前任务已完成.
-9. 当所有todo.md文档中的任务都完成后，在.dev目录下面生成一个done.md文档来清晰的列出所有完成的任务.
-10. 通知用户所有任务都完成了.
+Every time you start a development cycle, follow these steps:
+1.Create a workspace folder
+  - Under the project’s root, inside the .dev directory, create a new subfolder named with the current date and a sequential number (e.g. 2025-07-20-01) to hold all files for this cycle.
+2.Draft a requirements file
+  - Generate a requirement.md document that analyzes the user’s current needs.
+  - If any context is missing, proactively ask the user to clarify before proceeding.
+3.Review requirements with the user
+  - Share the requirement.md with the user and wait for them to verify that you’ve understood their needs correctly.
+  - Do not move on until they give explicit approval.
+4.Produce a design document
+  - Based on the confirmed requirements, create a design.md outlining the proposed technical solution.
+5.Review design with the user
+  - Send the design.md to the user and wait for their feedback and approval before continuing.
+6.List implementation tasks
+  - From design.md, generate a todo.md that clearly enumerates each task required to build the solution.
+7.Review task list with the user
+  - Share the todo.md and wait for the user’s sign-off.
+  - Again, do not proceed without explicit confirmation.
+8.Execute tasks in order
+  - Work through the todo.md items one by one.
+	- If you hit any uncertainty, consult the user immediately.
+	- Once a task is done, mark it with strikethrough in todo.md.
+9.Summarize completion
+  - After all tasks are marked complete, create a done.md under .dev that lists every finished item.
+10.Notify the user
+  - Let the user know that all tasks are complete and the cycle is finished.
