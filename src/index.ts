@@ -49,9 +49,7 @@ process.on('SIGTERM', () => {
 });
 
 // 启动应用
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
-    logger.error(`应用启动失败: ${error instanceof Error ? error.message : String(error)}`);
-    process.exit(1);
-  });
-}
+main().catch((error) => {
+  logger.error(`应用启动失败: ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
+});

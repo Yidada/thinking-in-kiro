@@ -153,6 +153,10 @@ export class DevelopmentFlowServer {
                 taskId: {
                   type: 'string',
                   description: '任务ID (action: task_complete)'
+                },
+                force: {
+                  type: 'boolean',
+                  description: '强制完成项目，跳过任务验证 (action: finish)'
                 }
               },
               required: ['action']
@@ -209,6 +213,8 @@ export class DevelopmentFlowServer {
           return await this.handleTodo(input);
         case DevelopmentPhase.TASK_COMPLETE:
           return await this.handleTaskComplete(input);
+        case DevelopmentPhase.STATUS:
+          return await this.handleStatus(input);
         case DevelopmentPhase.FINISH:
           return await this.handleFinish(input);
         default:
@@ -441,6 +447,52 @@ export class DevelopmentFlowServer {
   }
 
   /**
+   * 处理状态查询
+   */
+  private async handleStatus(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
+    if (!this.currentProject) {
+      throw new DevelopmentFlowError('请先初始化项目', 'NO_CURRENT_PROJECT');
+    }
+
+    const tasks = this.currentProject.tasks || [];
+    const completedTaskIds = this.currentProject.completedTasks || [];
+    const pendingTasks = tasks.filter(task => !completedTaskIds.includes(task.id));
+    const completedTasks = tasks.filter(task => completedTaskIds.includes(task.id));
+
+    const statusInfo = {
+      projectId: this.currentProject.id,
+      projectName: this.currentProject.name,
+      currentPhase: this.currentProject.phase,
+      totalTasks: tasks.length,
+      completedTasksCount: completedTasks.length,
+      pendingTasksCount: pendingTasks.length,
+      completionRate: tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0,
+      pendingTasks: pendingTasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        priority: task.priority
+      })),
+      completedTasks: completedTasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description
+      }))
+    };
+
+    return {
+      success: true,
+      message: `项目 "${this.currentProject.name}" 状态信息`,
+      projectId: this.currentProject.id,
+      phase: DevelopmentPhase.STATUS,
+      data: statusInfo,
+      nextSteps: pendingTasks.length > 0 
+        ? ['完成剩余任务 (action: task_complete)', '查看任务详情']
+        : ['所有任务已完成，可以结束项目 (action: finish)']
+    };
+  }
+
+  /**
    * 处理任务完成
    */
   private async handleTaskComplete(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
@@ -484,6 +536,25 @@ export class DevelopmentFlowServer {
   private async handleFinish(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
       throw new DevelopmentFlowError('请先初始化项目', 'NO_CURRENT_PROJECT');
+    }
+
+    // 检查是否所有任务都已完成（除非使用force参数）
+    if (!input.force && this.currentProject.tasks && this.currentProject.tasks.length > 0) {
+      const completedTaskIds = this.currentProject.completedTasks || [];
+      const allTaskIds = this.currentProject.tasks.map(task => task.id);
+      const uncompletedTasks = allTaskIds.filter(taskId => !completedTaskIds.includes(taskId));
+      
+      if (uncompletedTasks.length > 0) {
+        const pendingTaskDetails = this.currentProject.tasks
+          .filter(task => uncompletedTasks.includes(task.id))
+          .map(task => `- ${task.id}: ${task.title}`)
+          .join('\n');
+        
+        throw new DevelopmentFlowError(
+          `请先完成所有任务。剩余未完成任务:\n${pendingTaskDetails}\n\n解决方案:\n1. 使用 action: "task_complete" 逐个完成任务\n2. 使用 action: "status" 查看详细状态\n3. 使用 force: true 强制完成项目`,
+          'INCOMPLETE_TASKS'
+        );
+      }
     }
 
     // 更新项目状态

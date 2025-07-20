@@ -10,6 +10,7 @@ export enum DevelopmentPhase {
   DESIGN = 'design',
   TODO = 'todo',
   TASK_COMPLETE = 'task_complete',
+  STATUS = 'status',
   FINISH = 'finish'
 }
 
@@ -69,6 +70,7 @@ export interface DevelopmentFlowInput {
   deployment?: string;
   tasks?: Task[];
   taskId?: string;
+  force?: boolean;
 }
 
 // 工具输出结果接口
