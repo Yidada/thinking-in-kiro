@@ -28,7 +28,7 @@ import { StateManager } from './StateManager.js';
 import path from 'path';
 
 /**
- * 开发流程MCP服务器
+ * Development Flow MCP Server
  */
 export class DevelopmentFlowServer {
   private server: Server;
@@ -67,96 +67,96 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * 设置请求处理器
+   * Set up request handlers
    */
   private setupHandlers(): void {
-    // 工具列表处理器
+    // Tool list handler
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [
           {
             name: 'development_flow',
-            description: '统一的开发流程管理工具，支持项目初始化、需求分析、设计、任务管理和完成报告等完整开发流程。',
+            description: 'Unified development flow management tool that supports complete development workflow including project initialization, requirement analysis, design, task management, and completion reporting.',
             inputSchema: {
               type: 'object',
               properties: {
                 action: {
                   type: 'string',
                   enum: Object.values(DevelopmentPhase),
-                  description: '要执行的操作类型'
+                  description: 'Action type to execute'
                 },
                 projectName: {
                   type: 'string',
-                  description: '项目名称 (action: init)'
+                  description: 'Project name (action: init)'
                 },
                 description: {
                   type: 'string',
-                  description: '项目描述 (action: requirement)'
+                  description: 'Project description (action: requirement)'
                 },
                 requirements: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: '需求列表 (action: requirement)'
+                  description: 'Requirements list (action: requirement)'
                 },
                 functionalRequirements: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: '功能需求 (action: requirement)'
+                  description: 'Functional requirements (action: requirement)'
                 },
                 technicalRequirements: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: '技术需求 (action: requirement)'
+                  description: 'Technical requirements (action: requirement)'
                 },
                 acceptanceCriteria: {
                   type: 'array',
                   items: { type: 'string' },
-                  description: '验收标准 (action: requirement)'
+                  description: 'Acceptance criteria (action: requirement)'
                 },
                 phase: {
                   type: 'string',
-                  description: '确认阶段 (action: confirmation)'
+                  description: 'Confirmation phase (action: confirmation)'
                 },
                 confirmed: {
                   type: 'boolean',
-                  description: '是否确认 (action: confirmation)'
+                  description: 'Whether to confirm (action: confirmation)'
                 },
                 architecture: {
                   type: 'string',
-                  description: '技术架构 (action: design)'
+                  description: 'Technical architecture (action: design)'
                 },
                 implementation: {
                   type: 'string',
-                  description: '实现方案 (action: design)'
+                  description: 'Implementation plan (action: design)'
                 },
                 systemDesign: {
                   type: 'string',
-                  description: '系统设计 (action: design)'
+                  description: 'System design (action: design)'
                 },
                 dataStructures: {
                   type: 'string',
-                  description: '数据结构 (action: design)'
+                  description: 'Data structures (action: design)'
                 },
                 interfaces: {
                   type: 'string',
-                  description: '接口设计 (action: design)'
+                  description: 'Interface design (action: design)'
                 },
                 deployment: {
                   type: 'string',
-                  description: '部署方案 (action: design)'
+                  description: 'Deployment plan (action: design)'
                 },
                 tasks: {
                   type: 'array',
                   items: { type: 'object' },
-                  description: '任务列表 (action: todo)'
+                  description: 'Task list (action: todo)'
                 },
                 taskId: {
                   type: 'string',
-                  description: '任务ID (action: task_complete)'
+                  description: 'Task ID (action: task_complete)'
                 },
                 force: {
                   type: 'boolean',
-                  description: '强制完成项目，跳过任务验证 (action: finish)'
+                  description: 'Force complete project, skip task validation (action: finish)'
                 }
               },
               required: ['action']
@@ -166,12 +166,12 @@ export class DevelopmentFlowServer {
       };
     });
 
-    // 工具调用处理器
+    // Tool call handler
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
       
       if (name !== 'development_flow') {
-        throw new Error(`未知工具: ${name}`);
+        throw new Error(`Unknown tool: ${name}`);
       }
 
       try {
@@ -187,17 +187,17 @@ export class DevelopmentFlowServer {
           ]
         };
       } catch (error) {
-        logger.error(`工具调用失败: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(`Tool call failed: ${error instanceof Error ? error.message : String(error)}`);
         throw error;
       }
     });
   }
 
   /**
-   * 处理开发流程工具调用
+   * Handle development flow tool call
    */
   private async handleDevelopmentFlow(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
-    logger.info(`执行开发流程操作: ${input.action}`);
+    logger.info(`Executing development flow action: ${input.action}`);
 
     try {
       switch (input.action) {
@@ -219,7 +219,7 @@ export class DevelopmentFlowServer {
           return await this.handleFinish(input);
         default:
           throw new DevelopmentFlowError(
-            `不支持的操作类型: ${input.action}`,
+            `Unsupported action type: ${input.action}`,
             'INVALID_ACTION'
           );
       }
@@ -229,7 +229,7 @@ export class DevelopmentFlowServer {
       }
       
       throw new DevelopmentFlowError(
-        `执行操作失败: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to execute action: ${error instanceof Error ? error.message : String(error)}`,
         'EXECUTION_ERROR',
         input.action as DevelopmentPhase
       );
@@ -237,11 +237,11 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * 处理项目初始化
+   * Handle project initialization
    */
   private async handleInit(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!input.projectName) {
-      throw new DevelopmentFlowError('项目名称不能为空', 'MISSING_PROJECT_NAME');
+      throw new DevelopmentFlowError('Project name cannot be empty', 'MISSING_PROJECT_NAME');
     }
 
     const projectId = generateProjectId();
@@ -255,39 +255,39 @@ export class DevelopmentFlowServer {
       updatedAt: timestamp
     };
 
-    // 验证项目状态
+    // Validate project state
     const errors = validateProjectState(projectState);
     if (errors.length > 0) {
       throw new DevelopmentFlowError(
-        `项目状态验证失败: ${errors.join(', ')}`,
+        `Project state validation failed: ${errors.join(', ')}`,
         'VALIDATION_ERROR'
       );
     }
 
-    // 保存项目状态
+    // Save project state
     await this.stateManager.saveProjectState(projectState);
     this.currentProject = projectState;
 
-    logger.info(`项目初始化成功: ${input.projectName} (${projectId})`);
+    logger.info(`Project initialized successfully: ${input.projectName} (${projectId})`);
 
     return {
       success: true,
-      message: `项目 "${input.projectName}" 初始化成功`,
+      message: `Project "${input.projectName}" initialized successfully`,
       projectId,
       phase: DevelopmentPhase.INIT,
-      nextSteps: ['进行需求分析 (action: requirement)']
+      nextSteps: ['Proceed with requirement analysis (action: requirement)']
     };
   }
 
   /**
-   * 处理需求分析
+   * Handle requirement analysis
    */
   private async handleRequirement(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
-      throw new DevelopmentFlowError('请先初始化项目', 'NO_CURRENT_PROJECT');
+      throw new DevelopmentFlowError('Please initialize project first', 'NO_CURRENT_PROJECT');
     }
 
-    // 更新项目状态
+    // Update project state
     this.currentProject.phase = DevelopmentPhase.REQUIREMENT;
     this.currentProject.updatedAt = formatTimestamp();
     
@@ -307,71 +307,71 @@ export class DevelopmentFlowServer {
       this.currentProject.acceptanceCriteria = input.acceptanceCriteria;
     }
 
-    // 保存状态
+    // Save state
     await this.stateManager.saveProjectState(this.currentProject);
 
-    // 生成需求文档
+    // Generate requirement document
     const requirementDoc = await this.documentGenerator.generateRequirementDocument(this.currentProject);
     
-    logger.info(`需求分析完成: ${this.currentProject.name}`);
+    logger.info(`Requirement analysis completed: ${this.currentProject.name}`);
 
     return {
       success: true,
-      message: '需求分析完成',
+      message: 'Requirement analysis completed',
       projectId: this.currentProject.id,
       phase: DevelopmentPhase.REQUIREMENT,
-      nextSteps: ['等待用户确认需求 (action: confirmation)'],
+      nextSteps: ['Wait for user to confirm requirements (action: confirmation)'],
       generatedFiles: [requirementDoc]
     };
   }
 
   /**
-   * 处理确认阶段
+   * Handle confirmation phase
    */
   private async handleConfirmation(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
-      throw new DevelopmentFlowError('请先初始化项目', 'NO_CURRENT_PROJECT');
+      throw new DevelopmentFlowError('Please initialize project first', 'NO_CURRENT_PROJECT');
     }
 
     if (input.confirmed === undefined) {
-      throw new DevelopmentFlowError('请提供确认状态', 'MISSING_CONFIRMATION');
+      throw new DevelopmentFlowError('Please provide confirmation status', 'MISSING_CONFIRMATION');
     }
 
     if (!input.confirmed) {
       return {
         success: true,
-        message: '用户未确认，请修改后重新提交',
+        message: 'User not confirmed, please modify and resubmit',
         projectId: this.currentProject.id,
         phase: this.currentProject.phase,
-        nextSteps: ['修改当前阶段内容后重新提交']
+        nextSteps: ['Modify current phase content and resubmit']
       };
     }
 
-    // 更新确认状态
+    // Update confirmation status
     this.currentProject.phase = DevelopmentPhase.CONFIRMATION;
     this.currentProject.updatedAt = formatTimestamp();
     await this.stateManager.saveProjectState(this.currentProject);
 
-    logger.info(`用户确认完成: ${this.currentProject.name}`);
+    logger.info(`User confirmation completed: ${this.currentProject.name}`);
 
     return {
       success: true,
-      message: '用户确认完成，可以进入下一阶段',
+      message: 'User confirmation completed, can proceed to next phase',
       projectId: this.currentProject.id,
       phase: DevelopmentPhase.CONFIRMATION,
-      nextSteps: ['进行设计阶段 (action: design)']
+      nextSteps: ['Proceed with design phase (action: design)']
     };
   }
 
   /**
-   * 处理设计阶段
+   * Handle design phase
    */
   private async handleDesign(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
-      throw new DevelopmentFlowError('请先初始化项目', 'NO_CURRENT_PROJECT');
+      throw new DevelopmentFlowError('Please initialize project first', 'NO_CURRENT_PROJECT');
     }
 
-    // 更新项目状态
+    // Update project state
     this.currentProject.phase = DevelopmentPhase.DESIGN;
     this.currentProject.updatedAt = formatTimestamp();
     
@@ -394,33 +394,33 @@ export class DevelopmentFlowServer {
       this.currentProject.deployment = input.deployment;
     }
 
-    // 保存状态
+    // Save state
     await this.stateManager.saveProjectState(this.currentProject);
 
-    // 生成设计文档
+    // Generate design document
     const designDoc = await this.documentGenerator.generateDesignDocument(this.currentProject);
     
-    logger.info(`设计阶段完成: ${this.currentProject.name}`);
+    logger.info(`Design phase completed: ${this.currentProject.name}`);
 
     return {
       success: true,
-      message: '设计阶段完成',
+      message: 'Design phase completed',
       projectId: this.currentProject.id,
       phase: DevelopmentPhase.DESIGN,
-      nextSteps: ['等待用户确认设计 (action: confirmation)', '生成任务清单 (action: todo)'],
+      nextSteps: ['Wait for user to confirm design (action: confirmation)', 'Generate task list (action: todo)'],
       generatedFiles: [designDoc]
     };
   }
 
   /**
-   * 处理任务清单生成
+   * Handle task list generation
    */
   private async handleTodo(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
-      throw new DevelopmentFlowError('请先初始化项目', 'NO_CURRENT_PROJECT');
+      throw new DevelopmentFlowError('Please initialize project first', 'NO_CURRENT_PROJECT');
     }
 
-    // 更新项目状态
+    // Update project state
     this.currentProject.phase = DevelopmentPhase.TODO;
     this.currentProject.updatedAt = formatTimestamp();
     
@@ -428,30 +428,30 @@ export class DevelopmentFlowServer {
       this.currentProject.tasks = input.tasks;
     }
 
-    // 保存状态
+    // Save state
     await this.stateManager.saveProjectState(this.currentProject);
 
-    // 生成任务文档
+    // Generate task document
     const todoDoc = await this.documentGenerator.generateTodoDocument(this.currentProject);
     
-    logger.info(`任务清单生成完成: ${this.currentProject.name}`);
+    logger.info(`Task list generation completed: ${this.currentProject.name}`);
 
     return {
       success: true,
-      message: '任务清单生成完成',
+      message: 'Task list generation completed',
       projectId: this.currentProject.id,
       phase: DevelopmentPhase.TODO,
-      nextSteps: ['等待用户确认任务清单 (action: confirmation)', '开始执行任务 (action: task_complete)'],
+      nextSteps: ['Wait for user to confirm task list (action: confirmation)', 'Start executing tasks (action: task_complete)'],
       generatedFiles: [todoDoc]
     };
   }
 
   /**
-   * 处理状态查询
+   * Handle status query
    */
   private async handleStatus(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
-      throw new DevelopmentFlowError('请先初始化项目', 'NO_CURRENT_PROJECT');
+      throw new DevelopmentFlowError('Please initialize project first', 'NO_CURRENT_PROJECT');
     }
 
     const tasks = this.currentProject.tasks || [];
@@ -482,29 +482,29 @@ export class DevelopmentFlowServer {
 
     return {
       success: true,
-      message: `项目 "${this.currentProject.name}" 状态信息`,
+      message: `Project "${this.currentProject.name}" status information`,
       projectId: this.currentProject.id,
       phase: DevelopmentPhase.STATUS,
       data: statusInfo,
       nextSteps: pendingTasks.length > 0 
-        ? ['完成剩余任务 (action: task_complete)', '查看任务详情']
-        : ['所有任务已完成，可以结束项目 (action: finish)']
+        ? ['Complete remaining tasks (action: task_complete)', 'View task details']
+        : ['All tasks completed, can finish project (action: finish)']
     };
   }
 
   /**
-   * 处理任务完成
+   * Handle task completion
    */
   private async handleTaskComplete(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
-      throw new DevelopmentFlowError('请先初始化项目', 'NO_CURRENT_PROJECT');
+      throw new DevelopmentFlowError('Please initialize project first', 'NO_CURRENT_PROJECT');
     }
 
     if (!input.taskId) {
-      throw new DevelopmentFlowError('请提供任务ID', 'MISSING_TASK_ID');
+      throw new DevelopmentFlowError('Please provide task ID', 'MISSING_TASK_ID');
     }
 
-    // 更新任务状态
+    // Update task status
     if (!this.currentProject.completedTasks) {
       this.currentProject.completedTasks = [];
     }
@@ -516,29 +516,29 @@ export class DevelopmentFlowServer {
     this.currentProject.phase = DevelopmentPhase.TASK_COMPLETE;
     this.currentProject.updatedAt = formatTimestamp();
 
-    // 保存状态
+    // Save state
     await this.stateManager.saveProjectState(this.currentProject);
     
-    logger.info(`任务完成: ${input.taskId}`);
+    logger.info(`Task completed: ${input.taskId}`);
 
     return {
       success: true,
-      message: `任务 ${input.taskId} 已完成`,
+      message: `Task ${input.taskId} completed`,
       projectId: this.currentProject.id,
       phase: DevelopmentPhase.TASK_COMPLETE,
-      nextSteps: ['继续执行其他任务或完成项目 (action: finish)']
+      nextSteps: ['Continue executing other tasks or complete project (action: finish)']
     };
   }
 
   /**
-   * 处理项目完成
+   * Handle project completion
    */
   private async handleFinish(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
-      throw new DevelopmentFlowError('请先初始化项目', 'NO_CURRENT_PROJECT');
+      throw new DevelopmentFlowError('Please initialize project first', 'NO_CURRENT_PROJECT');
     }
 
-    // 检查是否所有任务都已完成（除非使用force参数）
+    // Check if all tasks are completed (unless using force parameter)
     if (!input.force && this.currentProject.tasks && this.currentProject.tasks.length > 0) {
       const completedTaskIds = this.currentProject.completedTasks || [];
       const allTaskIds = this.currentProject.tasks.map(task => task.id);
@@ -551,71 +551,71 @@ export class DevelopmentFlowServer {
           .join('\n');
         
         throw new DevelopmentFlowError(
-          `请先完成所有任务。剩余未完成任务:\n${pendingTaskDetails}\n\n解决方案:\n1. 使用 action: "task_complete" 逐个完成任务\n2. 使用 action: "status" 查看详细状态\n3. 使用 force: true 强制完成项目`,
+          `Please complete all tasks first. Remaining incomplete tasks:\n${pendingTaskDetails}\n\nSolutions:\n1. Use action: "task_complete" to complete tasks one by one\n2. Use action: "status" to view detailed status\n3. Use force: true to force complete project`,
           'INCOMPLETE_TASKS'
         );
       }
     }
 
-    // 更新项目状态
+    // Update project state
     this.currentProject.phase = DevelopmentPhase.FINISH;
     this.currentProject.updatedAt = formatTimestamp();
 
-    // 保存状态
+    // Save state
     await this.stateManager.saveProjectState(this.currentProject);
 
-    // 生成完成报告
+    // Generate completion report
     const doneDoc = await this.documentGenerator.generateDoneDocument(this.currentProject);
     
-    logger.info(`项目完成: ${this.currentProject.name}`);
+    logger.info(`Project completed: ${this.currentProject.name}`);
 
     const result = {
       success: true,
-      message: `项目 "${this.currentProject.name}" 已完成`,
+      message: `Project "${this.currentProject.name}" completed`,
       projectId: this.currentProject.id,
       phase: DevelopmentPhase.FINISH,
-      nextSteps: ['项目已完成'],
+      nextSteps: ['Project completed'],
       generatedFiles: [doneDoc]
     };
 
-    // 清理当前项目
+    // Clean up current project
     this.currentProject = null;
 
     return result;
   }
 
   /**
-   * 启动服务器
+   * Start server
    */
   public async start(): Promise<void> {
     const { StdioServerTransport } = await import('@modelcontextprotocol/sdk/server/stdio.js');
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     
-    logger.info('开发流程MCP服务器已启动');
+    logger.info('Development Flow MCP server started');
   }
 
   /**
-   * 获取服务器实例
+   * Get server instance
    */
   public getServer(): Server {
     return this.server;
   }
 
   /**
-   * 获取当前项目状态
+   * Get current project state
    */
   public getCurrentProject(): ProjectState | null {
     return this.currentProject;
   }
 
   /**
-   * 设置当前项目
+   * Set current project
    */
   public async setCurrentProject(projectId: string): Promise<void> {
     const project = await this.stateManager.loadProjectState(projectId);
     if (!project) {
-      throw new DevelopmentFlowError(`项目不存在: ${projectId}`, 'PROJECT_NOT_FOUND');
+      throw new DevelopmentFlowError(`Project does not exist: ${projectId}`, 'PROJECT_NOT_FOUND');
     }
     this.currentProject = project;
   }

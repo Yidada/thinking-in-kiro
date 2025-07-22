@@ -4,7 +4,7 @@ import { ProjectState, DevelopmentFlowConfig, DocumentTemplate } from '../types/
 import { ensureDir, generateNumberedDir, sanitizeFileName, formatTimestamp, logger } from '../utils/index.js';
 
 /**
- * 文档生成器
+ * Document generator
  */
 export class DocumentGenerator {
   private config: DevelopmentFlowConfig;
@@ -16,43 +16,43 @@ export class DocumentGenerator {
   }
 
   /**
-   * 初始化文档模板
+   * Initialize document templates
    */
   private initializeTemplates(): void {
-    // 需求文档模板
+    // Requirement document template
     this.templates.set('requirement', {
       name: 'requirement',
       path: 'requirement.md',
       variables: ['projectName', 'description', 'requirements', 'functionalRequirements', 'technicalRequirements', 'acceptanceCriteria'],
-      content: `# 需求分析文档
+      content: `# Requirements Analysis Document
 
-## 项目概述
-**项目名称**: {{projectName}}
-**创建时间**: {{createdAt}}
-**项目描述**: {{description}}
+## Project Overview
+**Project Name**: {{projectName}}
+**Creation Time**: {{createdAt}}
+**Project Description**: {{description}}
 
-## 核心需求
+## Core Requirements
 {{#if requirements}}
 {{#each requirements}}
 - {{this}}
 {{/each}}
 {{/if}}
 
-## 功能需求
+## Functional Requirements
 {{#if functionalRequirements}}
 {{#each functionalRequirements}}
 - {{this}}
 {{/each}}
 {{/if}}
 
-## 技术需求
+## Technical Requirements
 {{#if technicalRequirements}}
 {{#each technicalRequirements}}
 - {{this}}
 {{/each}}
 {{/if}}
 
-## 验收标准
+## Acceptance Criteria
 {{#if acceptanceCriteria}}
 {{#each acceptanceCriteria}}
 - {{this}}
@@ -60,142 +60,142 @@ export class DocumentGenerator {
 {{/if}}
 
 ---
-*文档生成时间: {{timestamp}}*`
+*Document generated at: {{timestamp}}*`
     });
 
-    // 设计文档模板
+    // Design document template
     this.templates.set('design', {
       name: 'design',
       path: 'design.md',
       variables: ['projectName', 'architecture', 'implementation', 'systemDesign', 'dataStructures', 'interfaces', 'deployment'],
-      content: `# 技术设计文档
+      content: `# Technical Design Document
 
-## 项目信息
-**项目名称**: {{projectName}}
-**设计时间**: {{updatedAt}}
+## Project Information
+**Project Name**: {{projectName}}
+**Design Time**: {{updatedAt}}
 
-## 技术架构
+## Technical Architecture
 {{#if architecture}}
 {{architecture}}
 {{/if}}
 
-## 实现方案
+## Implementation Plan
 {{#if implementation}}
 {{implementation}}
 {{/if}}
 
-## 系统设计
+## System Design
 {{#if systemDesign}}
 {{systemDesign}}
 {{/if}}
 
-## 数据结构
+## Data Structures
 {{#if dataStructures}}
 {{dataStructures}}
 {{/if}}
 
-## 接口设计
+## Interface Design
 {{#if interfaces}}
 {{interfaces}}
 {{/if}}
 
-## 部署方案
+## Deployment Plan
 {{#if deployment}}
 {{deployment}}
 {{/if}}
 
 ---
-*文档生成时间: {{timestamp}}*`
+*Document generated at: {{timestamp}}*`
     });
 
-    // 任务清单模板
+    // Task list template
     this.templates.set('todo', {
       name: 'todo',
       path: 'todo.md',
       variables: ['projectName', 'tasks'],
-      content: `# 任务清单
+      content: `# Task List
 
-## 项目信息
-**项目名称**: {{projectName}}
-**任务生成时间**: {{updatedAt}}
+## Project Information
+**Project Name**: {{projectName}}
+**Task Generation Time**: {{updatedAt}}
 
-## 待执行任务
+## Pending Tasks
 {{#if tasks}}
 {{#each tasks}}
 - [ ] **{{id}}**: {{title}}
-  - 描述: {{description}}
-  - 优先级: {{priority}}
-  - 预估工时: {{estimatedHours}}小时
+  - Description: {{description}}
+  - Priority: {{priority}}
+  - Estimated Hours: {{estimatedHours}} hours
   {{#if dependencies}}
-  - 依赖: {{#each dependencies}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+  - Dependencies: {{#each dependencies}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
   {{/if}}
 {{/each}}
 {{else}}
-暂无任务
+No tasks available
 {{/if}}
 
-## 实施阶段
-1. **准备阶段**: 环境配置和依赖安装
-2. **开发阶段**: 核心功能实现
-3. **测试阶段**: 功能测试和集成测试
-4. **部署阶段**: 生产环境部署
-5. **验收阶段**: 用户验收和文档整理
+## Implementation Phases
+1. **Preparation Phase**: Environment configuration and dependency installation
+2. **Development Phase**: Core functionality implementation
+3. **Testing Phase**: Functional testing and integration testing
+4. **Deployment Phase**: Production environment deployment
+5. **Acceptance Phase**: User acceptance and documentation organization
 
 ---
-*文档生成时间: {{timestamp}}*`
+*Document generated at: {{timestamp}}*`
     });
 
-    // 完成报告模板
+    // Completion report template
     this.templates.set('done', {
       name: 'done',
       path: 'done.md',
       variables: ['projectName', 'completedTasks', 'tasks'],
-      content: `# 项目完成报告
+      content: `# Project Completion Report
 
-## 项目信息
-**项目名称**: {{projectName}}
-**完成时间**: {{updatedAt}}
-**项目周期**: {{createdAt}} - {{updatedAt}}
+## Project Information
+**Project Name**: {{projectName}}
+**Completion Time**: {{updatedAt}}
+**Project Cycle**: {{createdAt}} - {{updatedAt}}
 
-## 已完成任务
+## Completed Tasks
 {{#if completedTasks}}
 {{#each completedTasks}}
 - [x] {{this}}
 {{/each}}
 {{else}}
-暂无已完成任务
+No completed tasks
 {{/if}}
 
-## 任务统计
-- 总任务数: {{#if tasks}}{{tasks.length}}{{else}}0{{/if}}
-- 已完成: {{#if completedTasks}}{{completedTasks.length}}{{else}}0{{/if}}
-- 完成率: {{#if tasks}}{{#if completedTasks}}{{math completedTasks.length '/' tasks.length '*' 100}}%{{else}}0%{{/if}}{{else}}N/A{{/if}}
+## Task Statistics
+- Total Tasks: {{#if tasks}}{{tasks.length}}{{else}}0{{/if}}
+- Completed: {{#if completedTasks}}{{completedTasks.length}}{{else}}0{{/if}}
+- Completion Rate: {{#if tasks}}{{#if completedTasks}}{{math completedTasks.length '/' tasks.length '*' 100}}%{{else}}0%{{/if}}{{else}}N/A{{/if}}
 
-## 项目总结
-项目 "{{projectName}}" 已成功完成所有预定目标。
+## Project Summary
+Project "{{projectName}}" has successfully completed all predetermined objectives.
 
-### 主要成果
-- 完成了完整的开发流程
-- 生成了规范的项目文档
-- 实现了所有核心功能
+### Key Achievements
+- Completed the full development workflow
+- Generated standardized project documentation
+- Implemented all core functionalities
 
-### 经验总结
-- 遵循了标准的开发流程
-- 保持了良好的文档记录
-- 确保了代码质量和可维护性
+### Lessons Learned
+- Followed standard development processes
+- Maintained good documentation practices
+- Ensured code quality and maintainability
 
 ---
-*报告生成时间: {{timestamp}}*`
+*Report generated at: {{timestamp}}*`
     });
   }
 
   /**
-   * 生成需求文档
+   * Generate requirement document
    */
   public async generateRequirementDocument(project: ProjectState): Promise<string> {
     const template = this.templates.get('requirement');
     if (!template) {
-      throw new Error('需求文档模板不存在');
+      throw new Error('Requirement document template does not exist');
     }
 
     const content = this.renderTemplate(template, {
@@ -209,17 +209,17 @@ export class DocumentGenerator {
     await ensureDir(dirPath);
     await fs.writeFile(filePath, content, 'utf-8');
     
-    logger.info(`需求文档已生成: ${filePath}`);
+    logger.info(`Requirement document generated: ${filePath}`);
     return filePath;
   }
 
   /**
-   * 生成设计文档
+   * Generate design document
    */
   public async generateDesignDocument(project: ProjectState): Promise<string> {
     const template = this.templates.get('design');
     if (!template) {
-      throw new Error('设计文档模板不存在');
+      throw new Error('Design document template does not exist');
     }
 
     const content = this.renderTemplate(template, {
@@ -233,17 +233,17 @@ export class DocumentGenerator {
     await ensureDir(dirPath);
     await fs.writeFile(filePath, content, 'utf-8');
     
-    logger.info(`设计文档已生成: ${filePath}`);
+    logger.info(`Design document generated: ${filePath}`);
     return filePath;
   }
 
   /**
-   * 生成任务文档
+   * Generate task document
    */
   public async generateTodoDocument(project: ProjectState): Promise<string> {
     const template = this.templates.get('todo');
     if (!template) {
-      throw new Error('任务文档模板不存在');
+      throw new Error('Task document template does not exist');
     }
 
     const content = this.renderTemplate(template, {
@@ -257,17 +257,17 @@ export class DocumentGenerator {
     await ensureDir(dirPath);
     await fs.writeFile(filePath, content, 'utf-8');
     
-    logger.info(`任务文档已生成: ${filePath}`);
+    logger.info(`Task document generated: ${filePath}`);
     return filePath;
   }
 
   /**
-   * 生成完成报告
+   * Generate completion report
    */
   public async generateDoneDocument(project: ProjectState): Promise<string> {
     const template = this.templates.get('done');
     if (!template) {
-      throw new Error('完成报告模板不存在');
+      throw new Error('Completion report template does not exist');
     }
 
     const content = this.renderTemplate(template, {
@@ -281,12 +281,12 @@ export class DocumentGenerator {
     await ensureDir(dirPath);
     await fs.writeFile(filePath, content, 'utf-8');
     
-    logger.info(`完成报告已生成: ${filePath}`);
+    logger.info(`Completion report generated: ${filePath}`);
     return filePath;
   }
 
   /**
-   * 获取项目目录
+   * Get project directory
    */
   private async getProjectDir(project: ProjectState): Promise<string> {
     const sanitizedName = sanitizeFileName(project.name);
@@ -295,31 +295,31 @@ export class DocumentGenerator {
   }
 
   /**
-   * 渲染模板
+   * Render template
    */
   private renderTemplate(template: DocumentTemplate, data: any): string {
     let content = template.content;
     
-    // 简单的模板渲染（替换变量）
+    // Simple template rendering (replace variables)
     content = content.replace(/\{\{(\w+)\}\}/g, (match: string, key: string) => {
       return data[key] || '';
     });
 
-    // 处理条件语句 {{#if variable}}
+    // Handle conditional statements {{#if variable}}
     content = content.replace(/\{\{#if (\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match: string, key: string, block: string) => {
       return data[key] ? block : '';
     });
 
-    // 处理循环语句 {{#each array}}
+    // Handle loop statements {{#each array}}
     content = content.replace(/\{\{#each (\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g, (match: string, key: string, block: string) => {
       const array = data[key];
       if (!Array.isArray(array)) return '';
       
       return array.map((item: any) => {
         let itemBlock = block;
-        // 替换 {{this}} 为当前项
+        // Replace {{this}} with current item
         itemBlock = itemBlock.replace(/\{\{this\}\}/g, typeof item === 'string' ? item : JSON.stringify(item));
-        // 替换对象属性
+        // Replace object properties
         if (typeof item === 'object' && item !== null) {
           itemBlock = itemBlock.replace(/\{\{(\w+)\}\}/g, (propMatch: string, propKey: string) => {
             return item[propKey] || '';
@@ -329,7 +329,7 @@ export class DocumentGenerator {
       }).join('');
     });
 
-    // 处理数学运算（简单实现）
+    // Handle mathematical operations (simple implementation)
     content = content.replace(/\{\{math ([\d.]+) '([+\-*/])' ([\d.]+) '\*' ([\d.]+)\}\}/g, (match: string, a: string, op: string, b: string, c: string) => {
       const numA = parseFloat(a);
       const numB = parseFloat(b);
@@ -351,27 +351,27 @@ export class DocumentGenerator {
   }
 
   /**
-   * 添加自定义模板
+   * Add custom template
    */
   public addTemplate(template: DocumentTemplate): void {
     this.templates.set(template.name, template);
-    logger.info(`添加自定义模板: ${template.name}`);
+    logger.info(`Added custom template: ${template.name}`);
   }
 
   /**
-   * 获取所有模板
+   * Get all templates
    */
   public getTemplates(): DocumentTemplate[] {
     return Array.from(this.templates.values());
   }
 
   /**
-   * 删除模板
+   * Remove template
    */
   public removeTemplate(name: string): boolean {
     const result = this.templates.delete(name);
     if (result) {
-      logger.info(`删除模板: ${name}`);
+      logger.info(`Removed template: ${name}`);
     }
     return result;
   }

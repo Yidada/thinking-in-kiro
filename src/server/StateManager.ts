@@ -4,7 +4,7 @@ import { ProjectState, DevelopmentFlowConfig, DevelopmentFlowError } from '../ty
 import { ensureDir, readJsonFile, writeJsonFile, logger } from '../utils/index.js';
 
 /**
- * 状态管理器
+ * State manager
  */
 export class StateManager {
   private config: DevelopmentFlowConfig;
@@ -18,24 +18,24 @@ export class StateManager {
   }
 
   /**
-   * 初始化状态管理器
+   * Initialize state manager
    */
   private async initializeStateManager(): Promise<void> {
     try {
       await ensureDir(this.stateDir);
       await this.loadProjectsIndex();
-      logger.info('状态管理器初始化完成');
+      logger.info('State manager initialization completed');
     } catch (error) {
-      logger.error(`状态管理器初始化失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(`State manager initialization failed: ${error instanceof Error ? error.message : String(error)}`);
       throw new DevelopmentFlowError(
-        '状态管理器初始化失败',
+        'State manager initialization failed',
         'STATE_MANAGER_INIT_ERROR'
       );
     }
   }
 
   /**
-   * 加载项目索引
+   * Load projects index
    */
   private async loadProjectsIndex(): Promise<void> {
     const indexPath = path.join(this.stateDir, 'projects.json');
@@ -43,12 +43,12 @@ export class StateManager {
     
     if (index) {
       this.projectsIndex = new Map(Object.entries(index));
-      logger.debug(`加载项目索引: ${this.projectsIndex.size} 个项目`);
+      logger.debug(`Loaded projects index: ${this.projectsIndex.size} projects`);
     }
   }
 
   /**
-   * 保存项目索引
+   * Save projects index
    */
   private async saveProjectsIndex(): Promise<void> {
     const indexPath = path.join(this.stateDir, 'projects.json');
@@ -57,30 +57,30 @@ export class StateManager {
   }
 
   /**
-   * 保存项目状态
+   * Save project state
    */
   public async saveProjectState(project: ProjectState): Promise<void> {
     try {
       const fileName = `${project.id}.json`;
       const filePath = path.join(this.stateDir, fileName);
       
-      // 创建备份（如果启用）
+      // Create backup (if enabled)
       if (this.config.autoBackup && await this.projectExists(project.id)) {
         await this.createBackup(project.id);
       }
       
-      // 保存项目状态
+      // Save project state
       await writeJsonFile(filePath, project);
       
-      // 更新索引
+      // Update index
       this.projectsIndex.set(project.id, filePath);
       await this.saveProjectsIndex();
       
-      logger.info(`项目状态已保存: ${project.id}`);
+      logger.info(`Project state saved: ${project.id}`);
     } catch (error) {
-      logger.error(`保存项目状态失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(`Failed to save project state: ${error instanceof Error ? error.message : String(error)}`);
       throw new DevelopmentFlowError(
-        `保存项目状态失败: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to save project state: ${error instanceof Error ? error.message : String(error)}`,
         'SAVE_STATE_ERROR',
         undefined,
         project.id
@@ -89,28 +89,28 @@ export class StateManager {
   }
 
   /**
-   * 加载项目状态
+   * Load project state
    */
   public async loadProjectState(projectId: string): Promise<ProjectState | null> {
     try {
       const filePath = this.projectsIndex.get(projectId);
       if (!filePath) {
-        logger.warn(`项目不存在: ${projectId}`);
+        logger.warn(`Project does not exist: ${projectId}`);
         return null;
       }
       
       const project = await readJsonFile<ProjectState>(filePath);
       if (!project) {
-        logger.warn(`项目状态文件损坏: ${projectId}`);
+        logger.warn(`Project state file corrupted: ${projectId}`);
         return null;
       }
       
-      logger.debug(`项目状态已加载: ${projectId}`);
+      logger.debug(`Project state loaded: ${projectId}`);
       return project;
     } catch (error) {
-      logger.error(`加载项目状态失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(`Failed to load project state: ${error instanceof Error ? error.message : String(error)}`);
       throw new DevelopmentFlowError(
-        `加载项目状态失败: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to load project state: ${error instanceof Error ? error.message : String(error)}`,
         'LOAD_STATE_ERROR',
         undefined,
         projectId
@@ -119,34 +119,34 @@ export class StateManager {
   }
 
   /**
-   * 删除项目状态
+   * Delete project state
    */
   public async deleteProjectState(projectId: string): Promise<boolean> {
     try {
       const filePath = this.projectsIndex.get(projectId);
       if (!filePath) {
-        logger.warn(`项目不存在: ${projectId}`);
+        logger.warn(`Project does not exist: ${projectId}`);
         return false;
       }
       
-      // 创建备份（如果启用）
+      // Create backup (if enabled)
       if (this.config.autoBackup) {
         await this.createBackup(projectId);
       }
       
-      // 删除文件
+      // Delete file
       await fs.unlink(filePath);
       
-      // 更新索引
+      // Update index
       this.projectsIndex.delete(projectId);
       await this.saveProjectsIndex();
       
-      logger.info(`项目状态已删除: ${projectId}`);
+      logger.info(`Project state deleted: ${projectId}`);
       return true;
     } catch (error) {
-      logger.error(`删除项目状态失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(`Failed to delete project state: ${error instanceof Error ? error.message : String(error)}`);
       throw new DevelopmentFlowError(
-        `删除项目状态失败: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to delete project state: ${error instanceof Error ? error.message : String(error)}`,
         'DELETE_STATE_ERROR',
         undefined,
         projectId
@@ -155,7 +155,7 @@ export class StateManager {
   }
 
   /**
-   * 检查项目是否存在
+   * Check if project exists
    */
   public async projectExists(projectId: string): Promise<boolean> {
     const filePath = this.projectsIndex.get(projectId);
@@ -167,7 +167,7 @@ export class StateManager {
       await fs.access(filePath);
       return true;
     } catch {
-      // 文件不存在，清理索引
+      // File does not exist, clean up index
       this.projectsIndex.delete(projectId);
       await this.saveProjectsIndex();
       return false;
@@ -175,7 +175,7 @@ export class StateManager {
   }
 
   /**
-   * 获取所有项目列表
+   * Get all projects list
    */
   public async getAllProjects(): Promise<ProjectState[]> {
     const projects: ProjectState[] = [];
@@ -186,23 +186,23 @@ export class StateManager {
         if (project) {
           projects.push(project);
         } else {
-          // 清理损坏的索引项
+          // Clean up corrupted index entry
           this.projectsIndex.delete(projectId);
         }
       } catch (error) {
-        logger.warn(`跳过损坏的项目文件: ${filePath}`);
+        logger.warn(`Skipping corrupted project file: ${filePath}`);
         this.projectsIndex.delete(projectId);
       }
     }
     
-    // 保存清理后的索引
+    // Save cleaned up index
     await this.saveProjectsIndex();
     
     return projects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }
 
   /**
-   * 根据条件查找项目
+   * Find projects by criteria
    */
   public async findProjects(filter: Partial<ProjectState>): Promise<ProjectState[]> {
     const allProjects = await this.getAllProjects();
@@ -218,7 +218,7 @@ export class StateManager {
   }
 
   /**
-   * 获取项目统计信息
+   * Get project statistics
    */
   public async getProjectStats(): Promise<{
     total: number;
@@ -232,7 +232,7 @@ export class StateManager {
       byPhase[project.phase] = (byPhase[project.phase] || 0) + 1;
     }
     
-    const recent = allProjects.slice(0, 5); // 最近5个项目
+    const recent = allProjects.slice(0, 5); // Recent 5 projects
     
     return {
       total: allProjects.length,
@@ -242,7 +242,7 @@ export class StateManager {
   }
 
   /**
-   * 创建备份
+   * Create backup
    */
   private async createBackup(projectId: string): Promise<void> {
     try {
@@ -261,17 +261,17 @@ export class StateManager {
       const content = await fs.readFile(filePath, 'utf-8');
       await fs.writeFile(backupPath, content, 'utf-8');
       
-      logger.debug(`创建备份: ${backupPath}`);
+      logger.debug(`Created backup: ${backupPath}`);
       
-      // 清理旧备份（保留最近10个）
+      // Clean up old backups (keep recent 10)
       await this.cleanupOldBackups(projectId);
     } catch (error) {
-      logger.warn(`创建备份失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(`Failed to create backup: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   /**
-   * 清理旧备份
+   * Clean up old backups
    */
   private async cleanupOldBackups(projectId: string): Promise<void> {
     try {
@@ -290,7 +290,7 @@ export class StateManager {
         return;
       }
       
-      // 按修改时间排序，删除最旧的文件
+      // Sort by modification time, delete oldest files
       const sortedBackups = await Promise.all(
         projectBackups.map(async backup => ({
           ...backup,
@@ -303,15 +303,15 @@ export class StateManager {
       const toDelete = sortedBackups.slice(10);
       for (const backup of toDelete) {
         await fs.unlink(backup.path);
-        logger.debug(`删除旧备份: ${backup.name}`);
+        logger.debug(`Deleted old backup: ${backup.name}`);
       }
     } catch (error) {
-      logger.warn(`清理旧备份失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(`Failed to clean up old backups: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   /**
-   * 恢复项目状态
+   * Restore project state
    */
   public async restoreProjectState(projectId: string, backupTimestamp?: string): Promise<ProjectState | null> {
     try {
@@ -322,14 +322,14 @@ export class StateManager {
       if (backupTimestamp) {
         backupFile = `${projectId}_${backupTimestamp}.json`;
       } else {
-        // 找到最新的备份
+        // Find latest backup
         const projectBackups = files
           .filter(file => file.startsWith(`${projectId}_`) && file.endsWith('.json'))
           .sort()
           .reverse();
         
         if (projectBackups.length === 0) {
-          logger.warn(`没有找到项目备份: ${projectId}`);
+          logger.warn(`No project backup found: ${projectId}`);
           return null;
         }
         
@@ -340,19 +340,19 @@ export class StateManager {
       const project = await readJsonFile<ProjectState>(backupPath);
       
       if (!project) {
-        logger.warn(`备份文件损坏: ${backupPath}`);
+        logger.warn(`Backup file corrupted: ${backupPath}`);
         return null;
       }
       
-      // 恢复项目状态
+      // Restore project state
       await this.saveProjectState(project);
       
-      logger.info(`项目状态已恢复: ${projectId} from ${backupFile}`);
+      logger.info(`Project state restored: ${projectId} from ${backupFile}`);
       return project;
     } catch (error) {
-      logger.error(`恢复项目状态失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(`Failed to restore project state: ${error instanceof Error ? error.message : String(error)}`);
       throw new DevelopmentFlowError(
-        `恢复项目状态失败: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to restore project state: ${error instanceof Error ? error.message : String(error)}`,
         'RESTORE_STATE_ERROR',
         undefined,
         projectId
@@ -361,11 +361,11 @@ export class StateManager {
   }
 
   /**
-   * 清理状态管理器
+   * Clean up state manager
    */
   public async cleanup(): Promise<void> {
     try {
-      // 验证所有索引项对应的文件是否存在
+      // Verify all indexed files exist
       const toRemove: string[] = [];
       
       for (const [projectId, filePath] of this.projectsIndex) {
@@ -376,31 +376,31 @@ export class StateManager {
         }
       }
       
-      // 清理无效索引项
+      // Clean up invalid index entries
       for (const projectId of toRemove) {
         this.projectsIndex.delete(projectId);
       }
       
       if (toRemove.length > 0) {
         await this.saveProjectsIndex();
-        logger.info(`清理了 ${toRemove.length} 个无效索引项`);
+        logger.info(`Cleaned up ${toRemove.length} invalid index entries`);
       }
       
-      logger.info('状态管理器清理完成');
+      logger.info('State manager cleanup completed');
     } catch (error) {
-      logger.error(`状态管理器清理失败: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(`State manager cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   /**
-   * 获取状态目录
+   * Get state directory
    */
   public getStateDir(): string {
     return this.stateDir;
   }
 
   /**
-   * 获取项目数量
+   * Get project count
    */
   public getProjectCount(): number {
     return this.projectsIndex.size;

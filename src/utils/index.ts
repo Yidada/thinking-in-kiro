@@ -3,7 +3,7 @@ import path from 'path';
 import { ProjectState, LogLevel, LogEntry } from '../types/index.js';
 
 /**
- * 生成唯一的项目ID
+ * Generate unique project ID
  */
 export function generateProjectId(): string {
   const timestamp = Date.now();
@@ -12,7 +12,7 @@ export function generateProjectId(): string {
 }
 
 /**
- * 生成带编号的目录名
+ * Generate numbered directory name
  */
 export function generateNumberedDir(baseDir: string, prefix: string = ''): string {
   const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
@@ -29,7 +29,7 @@ export function generateNumberedDir(baseDir: string, prefix: string = ''): strin
 }
 
 /**
- * 确保目录存在
+ * Ensure directory exists
  */
 export async function ensureDir(dirPath: string): Promise<void> {
   try {
@@ -40,7 +40,7 @@ export async function ensureDir(dirPath: string): Promise<void> {
 }
 
 /**
- * 安全地读取JSON文件
+ * Safely read JSON file
  */
 export async function readJsonFile<T>(filePath: string): Promise<T | null> {
   try {
@@ -52,7 +52,7 @@ export async function readJsonFile<T>(filePath: string): Promise<T | null> {
 }
 
 /**
- * 安全地写入JSON文件
+ * Safely write JSON file
  */
 export async function writeJsonFile(filePath: string, data: any): Promise<void> {
   await ensureDir(path.dirname(filePath));
@@ -60,35 +60,35 @@ export async function writeJsonFile(filePath: string, data: any): Promise<void> 
 }
 
 /**
- * 格式化时间戳
+ * Format timestamp
  */
 export function formatTimestamp(date: Date = new Date()): string {
   return date.toISOString();
 }
 
 /**
- * 验证项目状态
+ * Validate project state
  */
 export function validateProjectState(state: Partial<ProjectState>): string[] {
   const errors: string[] = [];
   
   if (!state.id) {
-    errors.push('项目ID不能为空');
+    errors.push('Project ID cannot be empty');
   }
   
   if (!state.name || state.name.trim().length === 0) {
-    errors.push('项目名称不能为空');
+    errors.push('Project name cannot be empty');
   }
   
   if (!state.phase) {
-    errors.push('项目阶段不能为空');
+    errors.push('Project phase cannot be empty');
   }
   
   return errors;
 }
 
 /**
- * 清理文件名（移除非法字符）
+ * Sanitize filename (remove invalid characters)
  */
 export function sanitizeFileName(fileName: string): string {
   return fileName
@@ -98,14 +98,14 @@ export function sanitizeFileName(fileName: string): string {
 }
 
 /**
- * 深度克隆对象
+ * Deep clone object
  */
 export function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
 /**
- * 简单的日志记录器
+ * Simple logger
  */
 export class Logger {
   private logs: LogEntry[] = [];
@@ -131,12 +131,12 @@ export class Logger {
     
     this.logs.push(entry);
     
-    // 保持日志数量在限制内
+    // Keep log count within limit
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(-this.maxLogs);
     }
     
-    // 输出到控制台
+    // Output to console
     const logMethod = level === LogLevel.ERROR ? console.error :
                      level === LogLevel.WARN ? console.warn :
                      console.log;
@@ -172,5 +172,5 @@ export class Logger {
   }
 }
 
-// 全局日志实例
+// Global logger instance
 export const logger = new Logger();

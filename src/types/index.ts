@@ -1,8 +1,8 @@
 /**
- * 核心类型定义
+ * Core type definitions
  */
 
-// 开发流程阶段枚举
+// Development flow phase enumeration
 export enum DevelopmentPhase {
   INIT = 'init',
   REQUIREMENT = 'requirement', 
@@ -14,7 +14,7 @@ export enum DevelopmentPhase {
   FINISH = 'finish'
 }
 
-// 项目状态接口
+// Project state interface
 export interface ProjectState {
   id: string;
   name: string;
@@ -36,7 +36,7 @@ export interface ProjectState {
   completedTasks?: string[];
 }
 
-// 任务接口
+// Task interface
 export interface Task {
   id: string;
   title: string;
@@ -51,7 +51,7 @@ export interface Task {
   updatedAt: string;
 }
 
-// 工具输入参数接口
+// Tool input parameters interface
 export interface DevelopmentFlowInput {
   action: DevelopmentPhase;
   projectName?: string;
@@ -73,7 +73,7 @@ export interface DevelopmentFlowInput {
   force?: boolean;
 }
 
-// 工具输出结果接口
+// Tool output result interface
 export interface DevelopmentFlowResult {
   success: boolean;
   message: string;
@@ -84,7 +84,7 @@ export interface DevelopmentFlowResult {
   generatedFiles?: string[];
 }
 
-// 错误类型
+// Error type
 export class DevelopmentFlowError extends Error {
   constructor(
     message: string,
@@ -97,7 +97,7 @@ export class DevelopmentFlowError extends Error {
   }
 }
 
-// 配置接口
+// Configuration interface
 export interface DevelopmentFlowConfig {
   baseDir: string;
   templatesDir: string;
@@ -108,7 +108,7 @@ export interface DevelopmentFlowConfig {
   autoBackup: boolean;
 }
 
-// 文档模板接口
+// Document template interface
 export interface DocumentTemplate {
   name: string;
   path: string;
@@ -116,7 +116,7 @@ export interface DocumentTemplate {
   content: string;
 }
 
-// 日志级别
+// Log level
 export enum LogLevel {
   DEBUG = 'debug',
   INFO = 'info',
@@ -124,7 +124,7 @@ export enum LogLevel {
   ERROR = 'error'
 }
 
-// 日志条目接口
+// Log entry interface
 export interface LogEntry {
   timestamp: string;
   level: LogLevel;
