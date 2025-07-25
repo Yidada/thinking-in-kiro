@@ -1,9 +1,368 @@
-# Thinking-in-Kiro
+# Thinking in Kiro - Development Flow MCP Server
 
 [![npm version](https://badge.fury.io/js/@stirstir%2Fthinking-in-kiro.svg)](https://badge.fury.io/js/@stirstir%2Fthinking-in-kiro)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A powerful Model Context Protocol (MCP) server that implements a structured development workflow with systematic requirement analysis, design planning, and task execution.
+A comprehensive development flow management system built on the Model Context Protocol (MCP) that provides structured project lifecycle management, from initial requirements gathering to final completion.
+
+## Overview
+
+Thinking in Kiro is an intelligent development flow server that guides projects through a systematic development process. It provides tools for requirement analysis, design documentation, task management, and project completion tracking, all while maintaining persistent state and generating comprehensive documentation.
+
+## Features
+
+### 🔄 **Structured Development Flow**
+- **8-Phase Development Process**: From initialization to completion
+- **State Persistence**: Automatic project state saving and restoration
+- **Phase Validation**: Ensures proper progression through development stages
+- **Rollback Support**: Ability to restore from backups
+
+### 📋 **Project Management**
+- **Requirement Analysis**: Structured requirement gathering and validation
+- **Design Documentation**: Technical architecture and implementation planning
+- **Task Breakdown**: Automatic task generation from design specifications
+- **Progress Tracking**: Real-time project status and completion monitoring
+
+### 📄 **Document Generation**
+- **Template System**: Customizable document templates
+- **Auto-generation**: Requirements, design, todo, and completion documents
+- **Variable Substitution**: Dynamic content based on project state
+- **Conditional Logic**: Smart template rendering with loops and conditions
+
+### 🔍 **Advanced Features**
+- **Project Search**: Find projects by criteria (phase, name, date)
+- **Statistics**: Comprehensive project analytics
+- **Backup System**: Automatic state backups with retention policies
+- **Logging**: Detailed operation logging with multiple levels
+- **Type Safety**: Full TypeScript implementation with comprehensive types
+
+## Architecture
+
+### Core Components
+
+#### **DevelopmentFlowServer**
+The main MCP server that handles all development flow operations:
+- Manages the 8-phase development workflow
+- Handles client requests and responses
+- Coordinates between StateManager and DocumentGenerator
+- Provides comprehensive error handling and validation
+
+#### **StateManager**
+Persistent state management for projects:
+- JSON-based project storage
+- Automatic backup creation and cleanup
+- Project indexing and search capabilities
+- Data integrity validation
+
+#### **DocumentGenerator**
+Template-based document generation system:
+- Customizable templates for each development phase
+- Variable substitution and conditional rendering
+- Support for loops, conditions, and mathematical operations
+- Automatic file generation and organization
+
+### Development Phases
+
+1. **INIT** - Project initialization and setup
+2. **REQUIREMENT** - Requirements gathering and analysis
+3. **CONFIRMATION** - User confirmation of requirements
+4. **DESIGN** - Technical design and architecture
+5. **TODO** - Task breakdown and planning
+6. **TASK_COMPLETE** - Individual task completion
+7. **STATUS** - Project status monitoring
+8. **FINISH** - Project completion and documentation
+
+## Installation
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd thinking-in-kiro
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Start the server
+npm start
+```
+
+## Usage
+
+### Starting the Server
+
+```bash
+# Development mode with auto-reload
+npm run dev
+
+# Production mode
+npm start
+
+# Custom configuration
+BASE_DIR=/custom/path npm start
+```
+
+### MCP Client Integration
+
+The server exposes the following MCP tools:
+
+#### **development_flow**
+Main tool for managing development workflow:
+
+```typescript
+// Initialize a new project
+const result = await client.callTool('development_flow', {
+  action: 'init',
+  projectName: 'My New Project',
+  description: 'A sample project for demonstration'
+});
+
+// Add requirements
+const reqResult = await client.callTool('development_flow', {
+  action: 'requirement',
+  projectName: 'My New Project',
+  requirements: [
+    'User authentication system',
+    'Data persistence layer',
+    'RESTful API endpoints'
+  ]
+});
+
+// Generate design documentation
+const designResult = await client.callTool('development_flow', {
+  action: 'design',
+  projectName: 'My New Project'
+});
+```
+
+### Project Lifecycle Example
+
+```typescript
+// 1. Initialize project
+await client.callTool('development_flow', {
+  action: 'init',
+  projectName: 'E-commerce Platform',
+  description: 'Modern e-commerce solution with React and Node.js'
+});
+
+// 2. Define requirements
+await client.callTool('development_flow', {
+  action: 'requirement',
+  projectName: 'E-commerce Platform',
+  requirements: [
+    'User registration and authentication',
+    'Product catalog management',
+    'Shopping cart functionality',
+    'Payment processing integration',
+    'Order management system'
+  ],
+  functionalRequirements: [
+    'Users can browse products by category',
+    'Users can add items to cart',
+    'Users can checkout and pay securely'
+  ],
+  technicalRequirements: [
+    'React frontend with TypeScript',
+    'Node.js backend with Express',
+    'PostgreSQL database',
+    'Stripe payment integration'
+  ]
+});
+
+// 3. Confirm requirements
+await client.callTool('development_flow', {
+  action: 'confirmation',
+  projectName: 'E-commerce Platform',
+  confirmed: true
+});
+
+// 4. Generate design
+await client.callTool('development_flow', {
+  action: 'design',
+  projectName: 'E-commerce Platform'
+});
+
+// 5. Create task list
+await client.callTool('development_flow', {
+  action: 'todo',
+  projectName: 'E-commerce Platform'
+});
+
+// 6. Complete tasks
+await client.callTool('development_flow', {
+  action: 'task_complete',
+  projectName: 'E-commerce Platform',
+  taskId: 'task_001'
+});
+
+// 7. Check status
+await client.callTool('development_flow', {
+  action: 'status',
+  projectName: 'E-commerce Platform'
+});
+
+// 8. Finish project
+await client.callTool('development_flow', {
+  action: 'finish',
+  projectName: 'E-commerce Platform'
+});
+```
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# Base directory for all operations (default: current directory)
+BASE_DIR=/path/to/projects
+
+# Enable debug logging
+DEBUG=true
+
+# Custom templates directory
+TEMPLATES_DIR=/path/to/templates
+
+# Maximum number of projects to maintain
+MAX_PROJECTS=100
+
+# Enable automatic backups
+AUTO_BACKUP=true
+```
+
+### Custom Templates
+
+Create custom document templates in the templates directory:
+
+```markdown
+<!-- templates/custom-requirement.md -->
+# {{projectName}} - Requirements
+
+## Project Description
+{{description}}
+
+## Requirements
+{{#each requirements}}
+- {{this}}
+{{/each}}
+
+## Functional Requirements
+{{#each functionalRequirements}}
+- {{this}}
+{{/each}}
+
+## Technical Requirements
+{{#each technicalRequirements}}
+- {{this}}
+{{/each}}
+```
+
+## API Reference
+
+### DevelopmentFlowInput Interface
+
+```typescript
+interface DevelopmentFlowInput {
+  action: DevelopmentPhase;
+  projectName?: string;
+  description?: string;
+  requirements?: string[];
+  functionalRequirements?: string[];
+  technicalRequirements?: string[];
+  acceptanceCriteria?: string[];
+  confirmed?: boolean;
+  taskId?: string;
+  force?: boolean;
+}
+```
+
+### DevelopmentFlowResult Interface
+
+```typescript
+interface DevelopmentFlowResult {
+  success: boolean;
+  message: string;
+  data?: any;
+  projectId?: string;
+  phase?: DevelopmentPhase;
+  nextSteps?: string[];
+  generatedFiles?: string[];
+}
+```
+
+## File Structure
+
+```
+thinking-in-kiro/
+├── src/
+│   ├── index.ts                 # Main entry point
+│   ├── server/
+│   │   ├── DevelopmentFlowServer.ts  # Core MCP server
+│   │   ├── StateManager.ts           # State persistence
+│   │   └── DocumentGenerator.ts      # Document generation
+│   ├── types/
+│   │   └── index.ts             # TypeScript type definitions
+│   └── utils/
+│       └── index.ts             # Utility functions
+├── templates/                   # Document templates
+├── .dev/                       # Development process files
+├── states/                     # Project state storage
+└── projects/                   # Generated project files
+```
+
+## Development
+
+### Building
+
+```bash
+# Build TypeScript
+npm run build
+
+# Watch mode for development
+npm run dev
+
+# Type checking
+npm run type-check
+```
+
+### Testing
+
+```bash
+# Run tests
+npm test
+
+# Test with coverage
+npm run test:coverage
+
+# Integration tests
+npm run test:integration
+```
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Make your changes and add tests
+4. Ensure all tests pass: `npm test`
+5. Commit your changes: `git commit -am 'Add new feature'`
+6. Push to the branch: `git push origin feature/new-feature`
+7. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For questions, issues, or contributions, please:
+- Open an issue on GitHub
+- Check the documentation
+- Review existing issues and discussions
+
+---
+
+**Thinking in Kiro** - Structured development flow management for modern software projects.
 
 ## Table of Contents
 

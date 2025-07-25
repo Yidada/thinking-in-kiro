@@ -4,19 +4,67 @@ import { ProjectState, DevelopmentFlowConfig, DocumentTemplate } from '../types/
 import { ensureDir, generateNumberedDir, sanitizeFileName, formatTimestamp, logger } from '../utils/index.js';
 
 /**
- * Document generator
+ * Document generator for development flow projects
+ * 
+ * Handles the generation of various project documents including requirements,
+ * design specifications, task lists, and completion reports. Uses a template-based
+ * approach with variable substitution and conditional rendering.
+ * 
+ * Features:
+ * - Pre-built templates for common document types
+ * - Custom template support
+ * - Variable substitution and conditional rendering
+ * - Automatic file organization and directory management
+ * - Markdown format output for easy viewing and editing
+ * 
+ * @example
+ * ```typescript
+ * const generator = new DocumentGenerator(config);
+ * const filePath = await generator.generateRequirementDocument(project);
+ * console.log(`Requirements document created at: ${filePath}`);
+ * ```
  */
 export class DocumentGenerator {
+  /** Configuration object containing project settings and paths */
   private config: DevelopmentFlowConfig;
+  
+  /** Map of document templates indexed by template name */
   private templates: Map<string, DocumentTemplate> = new Map();
 
+  /**
+   * Creates a new DocumentGenerator instance
+   * 
+   * Initializes the document generator with the provided configuration
+   * and sets up default templates for requirements, design, tasks, and
+   * completion reports.
+   * 
+   * @param config - Development flow configuration object
+   * 
+   * @example
+   * ```typescript
+   * const generator = new DocumentGenerator({
+   *   baseDir: '/path/to/project',
+   *   projectsDir: '/path/to/projects',
+   *   enableLogging: true
+   * });
+   * ```
+   */
   constructor(config: DevelopmentFlowConfig) {
     this.config = config;
     this.initializeTemplates();
   }
 
   /**
-   * Initialize document templates
+   * Initializes default document templates
+   * 
+   * Sets up pre-built templates for:
+   * - Requirements analysis document
+   * - Technical design document
+   * - Task list and todo document
+   * - Project completion report
+   * 
+   * Each template includes variable placeholders, conditional blocks,
+   * and formatting for professional document output.
    */
   private initializeTemplates(): void {
     // Requirement document template
@@ -190,7 +238,21 @@ Project "{{projectName}}" has successfully completed all predetermined objective
   }
 
   /**
-   * Generate requirement document
+   * Generates a requirements analysis document
+   * 
+   * Creates a comprehensive requirements document based on the project state,
+   * including project overview, core requirements, functional requirements,
+   * technical requirements, and acceptance criteria.
+   * 
+   * @param project - Project state containing requirement information
+   * @returns Promise resolving to the file path of the generated document
+   * @throws {Error} When requirement template is not found or file operations fail
+   * 
+   * @example
+   * ```typescript
+   * const filePath = await generator.generateRequirementDocument(project);
+   * console.log(`Requirements document created: ${filePath}`);
+   * ```
    */
   public async generateRequirementDocument(project: ProjectState): Promise<string> {
     const template = this.templates.get('requirement');
@@ -214,7 +276,21 @@ Project "{{projectName}}" has successfully completed all predetermined objective
   }
 
   /**
-   * Generate design document
+   * Generates a technical design document
+   * 
+   * Creates a detailed design document including technical architecture,
+   * implementation plan, system design, data structures, interface design,
+   * and deployment strategies.
+   * 
+   * @param project - Project state containing design information
+   * @returns Promise resolving to the file path of the generated document
+   * @throws {Error} When design template is not found or file operations fail
+   * 
+   * @example
+   * ```typescript
+   * const filePath = await generator.generateDesignDocument(project);
+   * console.log(`Design document created: ${filePath}`);
+   * ```
    */
   public async generateDesignDocument(project: ProjectState): Promise<string> {
     const template = this.templates.get('design');
@@ -238,7 +314,21 @@ Project "{{projectName}}" has successfully completed all predetermined objective
   }
 
   /**
-   * Generate task document
+   * Generates a task list document
+   * 
+   * Creates a comprehensive todo list with task details including IDs,
+   * descriptions, priorities, estimated hours, dependencies, and
+   * implementation phases for project execution.
+   * 
+   * @param project - Project state containing task information
+   * @returns Promise resolving to the file path of the generated document
+   * @throws {Error} When todo template is not found or file operations fail
+   * 
+   * @example
+   * ```typescript
+   * const filePath = await generator.generateTodoDocument(project);
+   * console.log(`Task list created: ${filePath}`);
+   * ```
    */
   public async generateTodoDocument(project: ProjectState): Promise<string> {
     const template = this.templates.get('todo');
@@ -262,7 +352,21 @@ Project "{{projectName}}" has successfully completed all predetermined objective
   }
 
   /**
-   * Generate completion report
+   * Generates a project completion report
+   * 
+   * Creates a final report documenting project completion including
+   * completed tasks, statistics, achievements, and lessons learned.
+   * This serves as a project closure document.
+   * 
+   * @param project - Project state with completion information
+   * @returns Promise resolving to the file path of the generated document
+   * @throws {Error} When completion template is not found or file operations fail
+   * 
+   * @example
+   * ```typescript
+   * const filePath = await generator.generateDoneDocument(project);
+   * console.log(`Completion report created: ${filePath}`);
+   * ```
    */
   public async generateDoneDocument(project: ProjectState): Promise<string> {
     const template = this.templates.get('done');
@@ -286,7 +390,19 @@ Project "{{projectName}}" has successfully completed all predetermined objective
   }
 
   /**
-   * Get project directory
+   * Gets the project directory path for document storage
+   * 
+   * Generates a sanitized directory path based on the project name
+   * and ensures it follows the configured project directory structure.
+   * 
+   * @param project - Project state containing the project name
+   * @returns Promise resolving to the absolute directory path
+   * 
+   * @example
+   * ```typescript
+   * const dirPath = await generator.getProjectDir(project);
+   * // Returns: '/projects/my-project_20231201_001'
+   * ```
    */
   private async getProjectDir(project: ProjectState): Promise<string> {
     const sanitizedName = sanitizeFileName(project.name);
@@ -295,7 +411,29 @@ Project "{{projectName}}" has successfully completed all predetermined objective
   }
 
   /**
-   * Render template
+   * Renders a document template with provided data
+   * 
+   * Processes template content by substituting variables, handling conditional
+   * blocks, processing loops, and performing basic mathematical operations.
+   * Supports Handlebars-like syntax for dynamic content generation.
+   * 
+   * Supported features:
+   * - Variable substitution: {{variableName}}
+   * - Conditional blocks: {{#if condition}}...{{/if}}
+   * - Array iteration: {{#each array}}...{{/each}}
+   * - Mathematical operations: {{math a '/' b '*' c}}
+   * 
+   * @param template - Document template with placeholders
+   * @param data - Data object containing values for template variables
+   * @returns Rendered template content as string
+   * 
+   * @example
+   * ```typescript
+   * const content = generator.renderTemplate(template, {
+   *   projectName: 'My Project',
+   *   tasks: ['Task 1', 'Task 2']
+   * });
+   * ```
    */
   private renderTemplate(template: DocumentTemplate, data: any): string {
     let content = template.content;
@@ -351,7 +489,23 @@ Project "{{projectName}}" has successfully completed all predetermined objective
   }
 
   /**
-   * Add custom template
+   * Adds a custom document template
+   * 
+   * Registers a new template that can be used for document generation.
+   * Custom templates follow the same variable substitution and conditional
+   * rendering rules as built-in templates.
+   * 
+   * @param template - Document template to add
+   * 
+   * @example
+   * ```typescript
+   * generator.addTemplate({
+   *   name: 'custom-report',
+   *   path: 'custom-report.md',
+   *   variables: ['title', 'content'],
+   *   content: '# {{title}}\n\n{{content}}'
+   * });
+   * ```
    */
   public addTemplate(template: DocumentTemplate): void {
     this.templates.set(template.name, template);
@@ -359,14 +513,40 @@ Project "{{projectName}}" has successfully completed all predetermined objective
   }
 
   /**
-   * Get all templates
+   * Gets all available document templates
+   * 
+   * Returns an array of all registered templates including both
+   * built-in and custom templates.
+   * 
+   * @returns Array of all available document templates
+   * 
+   * @example
+   * ```typescript
+   * const templates = generator.getTemplates();
+   * console.log(`Available templates: ${templates.map(t => t.name).join(', ')}`);
+   * ```
    */
   public getTemplates(): DocumentTemplate[] {
     return Array.from(this.templates.values());
   }
 
   /**
-   * Remove template
+   * Removes a document template by name
+   * 
+   * Unregisters a template from the generator. Built-in templates
+   * can be removed, but this may affect standard document generation
+   * functionality.
+   * 
+   * @param name - Name of the template to remove
+   * @returns True if template was found and removed, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * const removed = generator.removeTemplate('custom-report');
+   * if (removed) {
+   *   console.log('Template removed successfully');
+   * }
+   * ```
    */
   public removeTemplate(name: string): boolean {
     const result = this.templates.delete(name);

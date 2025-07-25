@@ -28,15 +28,64 @@ import { StateManager } from './StateManager.js';
 import path from 'path';
 
 /**
- * Development Flow MCP Server
+ * Main MCP server class for managing development flow operations
+ * 
+ * This server provides a comprehensive development workflow management system
+ * that guides users through structured phases from project initialization to
+ * completion. It integrates with the Model Context Protocol (MCP) to provide
+ * tool-based interactions for development project management.
+ * 
+ * The server manages the complete development lifecycle including:
+ * - Project initialization and setup
+ * - Requirements gathering and analysis
+ * - Design and architecture planning
+ * - Task breakdown and management
+ * - Progress tracking and status reporting
+ * - Project completion and documentation
+ * 
+ * @example
+ * ```typescript
+ * const server = new DevelopmentFlowServer({
+ *   baseDir: './projects',
+ *   enableLogging: true,
+ *   logLevel: 'info'
+ * });
+ * 
+ * await server.start();
+ * ```
  */
 export class DevelopmentFlowServer {
+  /** MCP server instance for handling protocol communications */
   private server: Server;
+  /** Configuration settings for the development flow server */
   private config: DevelopmentFlowConfig;
+  /** Document generator for creating project documentation */
   private documentGenerator: DocumentGenerator;
+  /** State manager for persisting project data */
   private stateManager: StateManager;
+  /** Currently active project state */
   private currentProject: ProjectState | null = null;
 
+  /**
+   * Creates a new DevelopmentFlowServer instance
+   * 
+   * Initializes the server with the provided configuration, sets up default
+   * values for missing configuration options, and creates necessary service
+   * instances for document generation and state management.
+   * 
+   * @param config - Partial configuration object with custom settings
+   * 
+   * @example
+   * ```typescript
+   * const server = new DevelopmentFlowServer({
+   *   baseDir: './my-projects',
+   *   projectsDir: './output',
+   *   enableLogging: true,
+   *   logLevel: 'debug',
+   *   maxProjects: 50
+   * });
+   * ```
+   */
   constructor(config: Partial<DevelopmentFlowConfig> = {}) {
     this.config = {
       baseDir: process.cwd(),
@@ -67,7 +116,14 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Set up request handlers
+   * Sets up MCP request handlers for tool listing and execution
+   * 
+   * Configures the server to handle two main types of requests:
+   * 1. ListTools - Returns available development flow tools and their schemas
+   * 2. CallTool - Executes development flow actions based on user input
+   * 
+   * The tool schema defines all supported development phases and their
+   * required/optional parameters for comprehensive workflow management.
    */
   private setupHandlers(): void {
     // Tool list handler
@@ -194,7 +250,23 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Handle development flow tool call
+   * Main handler for development flow tool calls
+   * 
+   * Routes incoming development flow requests to the appropriate phase handler
+   * based on the action type. Provides centralized error handling and logging
+   * for all development flow operations.
+   * 
+   * @param input - Development flow input containing action type and parameters
+   * @returns Promise resolving to the operation result
+   * @throws {DevelopmentFlowError} When action is unsupported or execution fails
+   * 
+   * @example
+   * ```typescript
+   * const result = await server.handleDevelopmentFlow({
+   *   action: DevelopmentPhase.INIT,
+   *   projectName: 'My New Project'
+   * });
+   * ```
    */
   private async handleDevelopmentFlow(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     logger.info(`Executing development flow action: ${input.action}`);
@@ -237,7 +309,24 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Handle project initialization
+   * Handles project initialization phase
+   * 
+   * Creates a new project with the provided name, generates a unique project ID,
+   * validates the initial project state, and saves it to persistent storage.
+   * This is the entry point for all development flow operations.
+   * 
+   * @param input - Input containing the project name
+   * @returns Promise resolving to initialization result with project ID
+   * @throws {DevelopmentFlowError} When project name is missing or validation fails
+   * 
+   * @example
+   * ```typescript
+   * const result = await handleInit({
+   *   action: DevelopmentPhase.INIT,
+   *   projectName: 'E-commerce Platform'
+   * });
+   * console.log(result.projectId); // 'proj_1703462400000_a1b2c3'
+   * ```
    */
   private async handleInit(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!input.projectName) {
@@ -280,7 +369,27 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Handle requirement analysis
+   * Handles requirements gathering and analysis phase
+   * 
+   * Updates the current project with requirement information including
+   * description, functional requirements, technical requirements, and
+   * acceptance criteria. Generates a requirements document for review.
+   * 
+   * @param input - Input containing requirement details
+   * @returns Promise resolving to requirement analysis result
+   * @throws {DevelopmentFlowError} When no current project exists
+   * 
+   * @example
+   * ```typescript
+   * const result = await handleRequirement({
+   *   action: DevelopmentPhase.REQUIREMENT,
+   *   description: 'Build a modern e-commerce platform',
+   *   requirements: ['User authentication', 'Product catalog', 'Shopping cart'],
+   *   functionalRequirements: ['User registration', 'Product search'],
+   *   technicalRequirements: ['React frontend', 'Node.js backend'],
+   *   acceptanceCriteria: ['All tests pass', 'Performance benchmarks met']
+   * });
+   * ```
    */
   private async handleRequirement(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
@@ -326,7 +435,30 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Handle confirmation phase
+   * Handles user confirmation for proceeding to the next phase
+   * 
+   * Processes user confirmation to either proceed with the current phase
+   * content or request modifications. This ensures user approval before
+   * moving forward in the development workflow.
+   * 
+   * @param input - Input containing confirmation status
+   * @returns Promise resolving to confirmation result
+   * @throws {DevelopmentFlowError} When no current project exists or confirmation status is missing
+   * 
+   * @example
+   * ```typescript
+   * // Confirm and proceed
+   * const result = await handleConfirmation({
+   *   action: DevelopmentPhase.CONFIRMATION,
+   *   confirmed: true
+   * });
+   * 
+   * // Request modifications
+   * const result = await handleConfirmation({
+   *   action: DevelopmentPhase.CONFIRMATION,
+   *   confirmed: false
+   * });
+   * ```
    */
   private async handleConfirmation(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
@@ -364,7 +496,25 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Handle design phase
+   * Handles design and architecture planning phase
+   * 
+   * Creates detailed design documentation including system architecture,
+   * component design, data structures, and implementation strategies.
+   * Generates design documents for technical review and implementation guidance.
+   * 
+   * @param input - Input containing design specifications
+   * @returns Promise resolving to design phase result
+   * @throws {DevelopmentFlowError} When no current project exists
+   * 
+   * @example
+   * ```typescript
+   * const result = await handleDesign({
+   *   action: DevelopmentPhase.DESIGN,
+   *   architecture: 'Microservices with React frontend',
+   *   components: ['UserService', 'ProductService', 'OrderService'],
+   *   technologies: ['React', 'Node.js', 'PostgreSQL', 'Redis']
+   * });
+   * ```
    */
   private async handleDesign(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
@@ -413,7 +563,23 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Handle task list generation
+   * Handles task list generation and management
+   * 
+   * Creates a comprehensive todo list based on project requirements and design.
+   * Breaks down the project into manageable tasks with priorities, estimates,
+   * and dependencies for efficient project execution.
+   * 
+   * @param input - Input for todo generation
+   * @returns Promise resolving to todo generation result
+   * @throws {DevelopmentFlowError} When no current project exists
+   * 
+   * @example
+   * ```typescript
+   * const result = await handleTodo({
+   *   action: DevelopmentPhase.TODO
+   * });
+   * console.log(result.tasks); // Array of generated tasks
+   * ```
    */
   private async handleTodo(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
@@ -447,7 +613,24 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Handle status query
+   * Handles project status queries
+   * 
+   * Retrieves current project information including phase, progress,
+   * completed tasks, and overall project health. Provides comprehensive
+   * status reporting for project monitoring and management.
+   * 
+   * @param input - Input for status query
+   * @returns Promise resolving to current project status
+   * @throws {DevelopmentFlowError} When no current project exists
+   * 
+   * @example
+   * ```typescript
+   * const result = await handleStatus({
+   *   action: DevelopmentPhase.STATUS
+   * });
+   * console.log(result.currentPhase); // Current development phase
+   * console.log(result.completedTasks); // Number of completed tasks
+   * ```
    */
   private async handleStatus(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
@@ -493,7 +676,24 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Handle task completion
+   * Handles task completion marking
+   * 
+   * Marks a specific task as completed and updates project progress.
+   * Validates task existence and updates the project state with
+   * completion timestamp and any additional notes.
+   * 
+   * @param input - Input containing task ID and completion details
+   * @returns Promise resolving to task completion result
+   * @throws {DevelopmentFlowError} When no current project exists or task ID is invalid
+   * 
+   * @example
+   * ```typescript
+   * const result = await handleTaskComplete({
+   *   action: DevelopmentPhase.TASK_COMPLETE,
+   *   taskId: 'task_001',
+   *   notes: 'Implemented user authentication with JWT'
+   * });
+   * ```
    */
   private async handleTaskComplete(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
@@ -531,7 +731,23 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Handle project completion
+   * Handles project completion and finalization
+   * 
+   * Finalizes the current project by marking it as completed,
+   * generating final reports, and cleaning up temporary resources.
+   * This is the final phase of the development workflow.
+   * 
+   * @param input - Input for project finalization
+   * @returns Promise resolving to project completion result
+   * @throws {DevelopmentFlowError} When no current project exists
+   * 
+   * @example
+   * ```typescript
+   * const result = await handleFinish({
+   *   action: DevelopmentPhase.FINISH,
+   *   summary: 'Project completed successfully with all requirements met'
+   * });
+   * ```
    */
   private async handleFinish(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
@@ -585,7 +801,20 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Start server
+   * Starts the MCP development flow server
+   * 
+   * Initializes and starts the MCP server on the configured transport.
+   * Sets up all request handlers and begins listening for client connections.
+   * This method should be called once to activate the server.
+   * 
+   * @throws {Error} When server fails to start or transport is unavailable
+   * 
+   * @example
+   * ```typescript
+   * const server = new DevelopmentFlowServer();
+   * await server.start();
+   * console.log('Development flow server is running');
+   * ```
    */
   public async start(): Promise<void> {
     const { StdioServerTransport } = await import('@modelcontextprotocol/sdk/server/stdio.js');
@@ -596,21 +825,61 @@ export class DevelopmentFlowServer {
   }
 
   /**
-   * Get server instance
+   * Gets the underlying MCP server instance
+   * 
+   * Provides access to the raw MCP server for advanced operations
+   * or integration with other MCP-based systems. Use with caution
+   * as direct server manipulation may affect the development flow.
+   * 
+   * @returns The MCP server instance
+   * 
+   * @example
+   * ```typescript
+   * const server = developmentFlowServer.getServer();
+   * // Access server capabilities or add custom handlers
+   * ```
    */
   public getServer(): Server {
     return this.server;
   }
 
   /**
-   * Get current project state
+   * Gets the currently active project state
+   * 
+   * Returns the project state for the currently active development
+   * project, or null if no project is currently loaded. This provides
+   * access to all project data including phase, tasks, and metadata.
+   * 
+   * @returns Current project state or null if no active project
+   * 
+   * @example
+   * ```typescript
+   * const project = server.getCurrentProject();
+   * if (project) {
+   *   console.log(`Current project: ${project.name}`);
+   *   console.log(`Phase: ${project.phase}`);
+   * }
+   * ```
    */
   public getCurrentProject(): ProjectState | null {
     return this.currentProject;
   }
 
   /**
-   * Set current project
+   * Sets the current project by loading it from storage
+   * 
+   * Loads a project from persistent storage and sets it as the current
+   * active project. This allows switching between different projects
+   * or resuming work on a previously created project.
+   * 
+   * @param projectId - ID of the project to load and set as current
+   * @throws {DevelopmentFlowError} When project doesn't exist
+   * 
+   * @example
+   * ```typescript
+   * await server.setCurrentProject('proj_1703462400000_a1b2c3');
+   * console.log('Project loaded and set as current');
+   * ```
    */
   public async setCurrentProject(projectId: string): Promise<void> {
     const project = await this.stateManager.loadProjectState(projectId);

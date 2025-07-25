@@ -4,13 +4,54 @@ import { ProjectState, DevelopmentFlowConfig, DevelopmentFlowError } from '../ty
 import { ensureDir, readJsonFile, writeJsonFile, logger } from '../utils/index.js';
 
 /**
- * State manager
+ * State manager for development flow projects
+ * 
+ * Handles persistent storage and retrieval of project states, including
+ * project data management, backup operations, and state indexing.
+ * Provides a centralized interface for all project state operations.
+ * 
+ * Features:
+ * - Project state persistence with JSON storage
+ * - Automatic backup creation and management
+ * - Project indexing for fast lookups
+ * - State validation and cleanup
+ * - Project statistics and filtering
+ * - Backup restoration capabilities
+ * 
+ * @example
+ * ```typescript
+ * const stateManager = new StateManager(config);
+ * await stateManager.saveProjectState(project);
+ * const loadedProject = await stateManager.loadProjectState(projectId);
+ * ```
  */
 export class StateManager {
+  /** Configuration object containing state management settings */
   private config: DevelopmentFlowConfig;
+  
+  /** Directory path where project states are stored */
   private stateDir: string;
+  
+  /** Index mapping project IDs to their file paths for fast lookups */
   private projectsIndex: Map<string, string> = new Map(); // projectId -> filePath
 
+  /**
+   * Creates a new StateManager instance
+   * 
+   * Initializes the state manager with the provided configuration,
+   * sets up the state directory, and loads the existing projects index.
+   * 
+   * @param config - Development flow configuration object
+   * 
+   * @example
+   * ```typescript
+   * const stateManager = new StateManager({
+   *   projectsDir: '/path/to/projects',
+   *   autoBackup: true,
+   *   enableLogging: true
+   * });
+   * ```
+   */
   constructor(config: DevelopmentFlowConfig) {
     this.config = config;
     this.stateDir = path.join(config.projectsDir, 'states');
@@ -18,7 +59,13 @@ export class StateManager {
   }
 
   /**
-   * Initialize state manager
+   * Initializes the state manager
+   * 
+   * Sets up the state directory structure and loads the existing
+   * projects index. This method is called automatically during
+   * construction and handles initial setup errors gracefully.
+   * 
+   * @throws {DevelopmentFlowError} When initialization fails
    */
   private async initializeStateManager(): Promise<void> {
     try {
@@ -35,7 +82,11 @@ export class StateManager {
   }
 
   /**
-   * Load projects index
+   * Loads the projects index from persistent storage
+   * 
+   * Reads the projects.json file containing the mapping of project IDs
+   * to their file paths. If the index file doesn't exist, starts with
+   * an empty index.
    */
   private async loadProjectsIndex(): Promise<void> {
     const indexPath = path.join(this.stateDir, 'projects.json');
@@ -48,7 +99,11 @@ export class StateManager {
   }
 
   /**
-   * Save projects index
+   * Saves the projects index to persistent storage
+   * 
+   * Writes the current projects index to the projects.json file,
+   * ensuring the mapping between project IDs and file paths is
+   * preserved across application restarts.
    */
   private async saveProjectsIndex(): Promise<void> {
     const indexPath = path.join(this.stateDir, 'projects.json');
@@ -57,7 +112,24 @@ export class StateManager {
   }
 
   /**
-   * Save project state
+   * Saves a project state to persistent storage
+   * 
+   * Persists the project state to a JSON file, creates a backup if enabled,
+   * and updates the projects index. This is the primary method for storing
+   * project data and ensuring it survives application restarts.
+   * 
+   * @param project - Project state to save
+   * @throws {DevelopmentFlowError} When save operation fails
+   * 
+   * @example
+   * ```typescript
+   * await stateManager.saveProjectState({
+   *   id: 'proj_123',
+   *   name: 'My Project',
+   *   phase: DevelopmentPhase.DESIGN,
+   *   // ... other project properties
+   * });
+   * ```
    */
   public async saveProjectState(project: ProjectState): Promise<void> {
     try {
@@ -89,7 +161,24 @@ export class StateManager {
   }
 
   /**
-   * Load project state
+   * Loads a project state from persistent storage
+   * 
+   * Retrieves the project state from storage using the project ID.
+   * Returns null if the project doesn't exist or the state file is corrupted.
+   * 
+   * @param projectId - Unique identifier of the project to load
+   * @returns Promise resolving to project state or null if not found
+   * @throws {DevelopmentFlowError} When load operation fails
+   * 
+   * @example
+   * ```typescript
+   * const project = await stateManager.loadProjectState('proj_123');
+   * if (project) {
+   *   console.log(`Loaded project: ${project.name}`);
+   * } else {
+   *   console.log('Project not found');
+   * }
+   * ```
    */
   public async loadProjectState(projectId: string): Promise<ProjectState | null> {
     try {
@@ -119,7 +208,24 @@ export class StateManager {
   }
 
   /**
-   * Delete project state
+   * Deletes a project state from persistent storage
+   * 
+   * Removes the project state file and updates the projects index.
+   * Creates a backup before deletion if auto-backup is enabled.
+   * 
+   * @param projectId - Unique identifier of the project to delete
+   * @returns Promise resolving to true if deleted, false if not found
+   * @throws {DevelopmentFlowError} When delete operation fails
+   * 
+   * @example
+   * ```typescript
+   * const deleted = await stateManager.deleteProjectState('proj_123');
+   * if (deleted) {
+   *   console.log('Project deleted successfully');
+   * } else {
+   *   console.log('Project not found');
+   * }
+   * ```
    */
   public async deleteProjectState(projectId: string): Promise<boolean> {
     try {
@@ -155,7 +261,23 @@ export class StateManager {
   }
 
   /**
-   * Check if project exists
+   * Checks if a project exists in storage
+   * 
+   * Verifies that a project with the given ID exists and its state file
+   * is accessible. Automatically cleans up invalid index entries.
+   * 
+   * @param projectId - Unique identifier of the project to check
+   * @returns Promise resolving to true if project exists, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * const exists = await stateManager.projectExists('proj_123');
+   * if (exists) {
+   *   console.log('Project exists');
+   * } else {
+   *   console.log('Project not found');
+   * }
+   * ```
    */
   public async projectExists(projectId: string): Promise<boolean> {
     const filePath = this.projectsIndex.get(projectId);
@@ -175,7 +297,23 @@ export class StateManager {
   }
 
   /**
-   * Get all projects list
+   * Retrieves all project states from storage
+   * 
+   * Loads and returns all projects currently stored in the state manager.
+   * Projects are loaded from their individual state files based on the
+   * projects index. Invalid or corrupted projects are automatically cleaned up.
+   * 
+   * @returns Promise resolving to array of all project states
+   * @throws {DevelopmentFlowError} When loading projects fails
+   * 
+   * @example
+   * ```typescript
+   * const allProjects = await stateManager.getAllProjects();
+   * console.log(`Found ${allProjects.length} projects`);
+   * allProjects.forEach(project => {
+   *   console.log(`- ${project.name} (${project.phase})`);
+   * });
+   * ```
    */
   public async getAllProjects(): Promise<ProjectState[]> {
     const projects: ProjectState[] = [];
@@ -202,7 +340,27 @@ export class StateManager {
   }
 
   /**
-   * Find projects by criteria
+   * Finds projects matching specified criteria
+   * 
+   * Searches through all projects and returns those that match the given
+   * criteria. Uses partial matching against project properties.
+   * 
+   * @param filter - Partial project state object to match against
+   * @returns Promise resolving to array of matching project states
+   * @throws {DevelopmentFlowError} When search operation fails
+   * 
+   * @example
+   * ```typescript
+   * // Find all projects in design phase
+   * const designProjects = await stateManager.findProjects({
+   *   phase: DevelopmentPhase.DESIGN
+   * });
+   * 
+   * // Find projects by name
+   * const webProjects = await stateManager.findProjects({
+   *   name: 'My Web Project'
+   * });
+   * ```
    */
   public async findProjects(filter: Partial<ProjectState>): Promise<ProjectState[]> {
     const allProjects = await this.getAllProjects();
@@ -218,7 +376,27 @@ export class StateManager {
   }
 
   /**
-   * Get project statistics
+   * Retrieves comprehensive project statistics
+   * 
+   * Analyzes all projects and returns statistical information including
+   * total count, distribution by phase, and recently updated projects.
+   * 
+   * @returns Promise resolving to project statistics object
+   * @returns returns.total - Total number of projects
+   * @returns returns.byPhase - Count of projects by development phase
+   * @returns returns.recent - Array of 5 most recently updated projects
+   * @throws {DevelopmentFlowError} When statistics calculation fails
+   * 
+   * @example
+   * ```typescript
+   * const stats = await stateManager.getProjectStats();
+   * console.log(`Total projects: ${stats.total}`);
+   * console.log(`Recent projects: ${stats.recent.length}`);
+   * 
+   * Object.entries(stats.byPhase).forEach(([phase, count]) => {
+   *   console.log(`${phase}: ${count} projects`);
+   * });
+   * ```
    */
   public async getProjectStats(): Promise<{
     total: number;
@@ -242,7 +420,19 @@ export class StateManager {
   }
 
   /**
-   * Create backup
+   * Creates a backup of a project state
+   * 
+   * Saves a timestamped backup copy of the project state to the backups
+   * directory. Backups are automatically cleaned up based on retention settings.
+   * 
+   * @param projectId - Unique identifier of the project to backup
+   * @throws {DevelopmentFlowError} When backup creation fails
+   * 
+   * @example
+   * ```typescript
+   * // This is called automatically during save operations
+   * await this.createBackup('proj_123');
+   * ```
    */
   private async createBackup(projectId: string): Promise<void> {
     try {
@@ -271,7 +461,19 @@ export class StateManager {
   }
 
   /**
-   * Clean up old backups
+   * Cleans up old backup files for a specific project
+   * 
+   * Removes backup files older than the configured retention period.
+   * This helps prevent unlimited disk usage from accumulated backups.
+   * 
+   * @param projectId - Unique identifier of the project to clean backups for
+   * @throws {DevelopmentFlowError} When cleanup operation fails
+   * 
+   * @example
+   * ```typescript
+   * // This is called automatically during backup creation
+   * await this.cleanupOldBackups('proj_123');
+   * ```
    */
   private async cleanupOldBackups(projectId: string): Promise<void> {
     try {
@@ -311,7 +513,28 @@ export class StateManager {
   }
 
   /**
-   * Restore project state
+   * Restores a project state from a backup
+   * 
+   * Loads a project state from a specific backup file and restores it
+   * as the current state. If no timestamp is provided, restores from
+   * the most recent backup.
+   * 
+   * @param projectId - Unique identifier of the project to restore
+   * @param backupTimestamp - Optional timestamp of the backup to restore from
+   * @returns Promise resolving to restored project state or null if backup not found
+   * @throws {DevelopmentFlowError} When restore operation fails
+   * 
+   * @example
+   * ```typescript
+   * // Restore from latest backup
+   * const restored = await stateManager.restoreProjectState('proj_123');
+   * 
+   * // Restore from specific backup
+   * const restored = await stateManager.restoreProjectState(
+   *   'proj_123',
+   *   '2024-01-15T10-30-00-000Z'
+   * );
+   * ```
    */
   public async restoreProjectState(projectId: string, backupTimestamp?: string): Promise<ProjectState | null> {
     try {
@@ -361,7 +584,19 @@ export class StateManager {
   }
 
   /**
-   * Clean up state manager
+   * Performs cleanup operations for the state manager
+   * 
+   * Verifies all indexed files exist and removes invalid entries.
+   * Should be called periodically or during application shutdown
+   * to maintain data integrity.
+   * 
+   * @throws {DevelopmentFlowError} When cleanup operations fail
+   * 
+   * @example
+   * ```typescript
+   * // Call during application shutdown
+   * await stateManager.cleanup();
+   * ```
    */
   public async cleanup(): Promise<void> {
     try {
@@ -393,14 +628,36 @@ export class StateManager {
   }
 
   /**
-   * Get state directory
+   * Gets the state directory path
+   * 
+   * Returns the absolute path to the directory where project states
+   * and related files are stored.
+   * 
+   * @returns Absolute path to the state directory
+   * 
+   * @example
+   * ```typescript
+   * const stateDir = stateManager.getStateDir();
+   * console.log(`States stored in: ${stateDir}`);
+   * ```
    */
   public getStateDir(): string {
     return this.stateDir;
   }
 
   /**
-   * Get project count
+   * Gets the total number of projects
+   * 
+   * Returns the count of projects currently tracked in the projects index.
+   * This is a synchronous operation that doesn't load project files.
+   * 
+   * @returns Number of projects in the index
+   * 
+   * @example
+   * ```typescript
+   * const count = stateManager.getProjectCount();
+   * console.log(`Total projects: ${count}`);
+   * ```
    */
   public getProjectCount(): number {
     return this.projectsIndex.size;
