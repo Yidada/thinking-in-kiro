@@ -1,5 +1,5 @@
 {
-  "name": "thinking-in-kiro",
+  "name": "@stirling/thinking-in-kiro",
   "version": "1.0.0",
   "description": "MCP server for structured development flow",
   "type": "module",
@@ -35,4 +35,4 @@
   "engines": {
     "node": ">=18"
   }
-} 
+}
