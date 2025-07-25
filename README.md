@@ -1,6 +1,6 @@
 # Thinking-in-Kiro
 
-[![npm version](https://badge.fury.io/js/@stirling%2Fthinking-in-kiro.svg)](https://badge.fury.io/js/@stirling%2Fthinking-in-kiro)
+[![npm version](https://badge.fury.io/js/@stirstir%2Fthinking-in-kiro.svg)](https://badge.fury.io/js/@stirstir%2Fthinking-in-kiro)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A powerful Model Context Protocol (MCP) server that implements a structured development workflow with systematic requirement analysis, design planning, and task execution.
@@ -37,7 +37,7 @@ A powerful Model Context Protocol (MCP) server that implements a structured deve
 The fastest way to get started is using `npx`:
 
 ```bash
-npx @stirling/thinking-in-kiro
+npx @stirstir/thinking-in-kiro
 ```
 
 This command will:
@@ -54,7 +54,7 @@ Then, configure your MCP client to connect to the server (see [Configuration](#c
 For permanent use, install globally:
 
 ```bash
-npm install -g @stirling/thinking-in-kiro
+npm install -g @stirstir/thinking-in-kiro
 ```
 
 Then run:
@@ -68,7 +68,7 @@ thinking-in-kiro
 For project-specific use:
 
 ```bash
-npm install @stirling/thinking-in-kiro
+npm install @stirstir/thinking-in-kiro
 ```
 
 Then run:
@@ -102,7 +102,7 @@ Add to your `claude_desktop_config.json`:
   "mcpServers": {
     "thinking-in-kiro": {
       "command": "npx",
-      "args": ["-y", "@stirling/thinking-in-kiro"]
+      "args": ["-y", "@stirstir/thinking-in-kiro"]
     }
   }
 }
@@ -117,7 +117,7 @@ Add to your VS Code `settings.json`:
   "mcp.servers": {
     "thinking-in-kiro": {
       "command": "npx",
-      "args": ["-y", "@stirling/thinking-in-kiro"]
+      "args": ["-y", "@stirstir/thinking-in-kiro"]
     }
   }
 }
@@ -131,7 +131,7 @@ If you installed globally, use:
 {
   "mcpServers": {
     "thinking-in-kiro": {
-      "command": "@stirling/thinking-in-kiro"
+      "command": "@stirstir/thinking-in-kiro"
     }
   }
 }
@@ -168,15 +168,15 @@ If you installed globally, use:
 **Server Won't Start**
 - Ensure Node.js 18+ is installed: `node --version`
 - Check if port is available
-- Verify installation: `npm list -g @stirling/thinking-in-kiro`
+- Verify installation: `npm list -g @stirstir/thinking-in-kiro`
 
 **MCP Client Can't Connect**
 - Verify configuration file syntax
 - Check that the command path is correct
-- Ensure the server is running: test with `npx @stirling/thinking-in-kiro`
+- Ensure the server is running: test with `npx @stirstir/thinking-in-kiro`
 
 **Permission Errors**
-- On macOS/Linux, you might need: `sudo npm install -g @stirling/thinking-in-kiro`
+- On macOS/Linux, you might need: `sudo npm install -g @stirstir/thinking-in-kiro`
 - Or use a Node version manager like nvm
 
 **Tools Not Available**
@@ -206,7 +206,7 @@ A: Yes, each project can have its own development flow instance.
 A: It's designed to work with any MCP-compatible client, but has been tested primarily with Claude Desktop and VS Code.
 
 **Q: How do I update to the latest version?**
-A: Run `npm update -g @stirling/thinking-in-kiro` for global installations, or `npm update @stirling/thinking-in-kiro` for local installations.
+A: Run `npm update -g @stirstir/thinking-in-kiro` for global installations, or `npm update @stirstir/thinking-in-kiro` for local installations.
 
 ## For Contributors
 
@@ -214,7 +214,7 @@ A: Run `npm update -g @stirling/thinking-in-kiro` for global installations, or `
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/stirling-labs/thinking-in-kiro.git
+   git clone https://github.com/stirstir-labs/thinking-in-kiro.git
    cd thinking-in-kiro
    ```
 
