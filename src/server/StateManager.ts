@@ -13,7 +13,7 @@ export class StateManager {
 
   constructor(config: DevelopmentFlowConfig) {
     this.config = config;
-    this.stateDir = path.join(config.baseDir, '.dev', 'states');
+    this.stateDir = path.join(config.projectsDir, 'states');
     this.initializeStateManager();
   }
 

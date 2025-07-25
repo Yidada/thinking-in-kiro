@@ -41,7 +41,7 @@ export class DevelopmentFlowServer {
     this.config = {
       baseDir: process.cwd(),
       templatesDir: path.join(process.cwd(), 'templates'),
-      projectsDir: path.join(process.cwd(), '.dev'),
+      projectsDir: path.join('/tmp', '.dev'),
       enableLogging: true,
       logLevel: 'info',
       maxProjects: 100,
