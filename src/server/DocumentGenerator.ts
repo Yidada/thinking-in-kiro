@@ -407,7 +407,7 @@ Project "{{projectName}}" has successfully completed all predetermined objective
   private async getProjectDir(project: ProjectState): Promise<string> {
     const sanitizedName = sanitizeFileName(project.name);
     const dirName = generateNumberedDir(this.config.projectsDir, sanitizedName);
-    return path.join(this.config.projectsDir, dirName);
+    return path.join(this.config.projectsDir, await dirName);
   }
 
   /**
@@ -439,17 +439,17 @@ Project "{{projectName}}" has successfully completed all predetermined objective
     let content = template.content;
     
     // Simple template rendering (replace variables)
-    content = content.replace(/\{\{(\w+)\}\}/g, (match: string, key: string) => {
+    content = content.replace(/\{\{(\w+)\}\}/g, (_match: string, key: string) => {
       return data[key] || '';
     });
 
     // Handle conditional statements {{#if variable}}
-    content = content.replace(/\{\{#if (\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match: string, key: string, block: string) => {
+    content = content.replace(/\{\{#if (\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (_match: string, key: string, block: string) => {
       return data[key] ? block : '';
     });
 
     // Handle loop statements {{#each array}}
-    content = content.replace(/\{\{#each (\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g, (match: string, key: string, block: string) => {
+    content = content.replace(/\{\{#each (\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g, (_match: string, key: string, block: string) => {
       const array = data[key];
       if (!Array.isArray(array)) return '';
       
@@ -459,7 +459,7 @@ Project "{{projectName}}" has successfully completed all predetermined objective
         itemBlock = itemBlock.replace(/\{\{this\}\}/g, typeof item === 'string' ? item : JSON.stringify(item));
         // Replace object properties
         if (typeof item === 'object' && item !== null) {
-          itemBlock = itemBlock.replace(/\{\{(\w+)\}\}/g, (propMatch: string, propKey: string) => {
+          itemBlock = itemBlock.replace(/\{\{(\w+)\}\}/g, (_propMatch: string, propKey: string) => {
             return item[propKey] || '';
           });
         }
@@ -468,7 +468,7 @@ Project "{{projectName}}" has successfully completed all predetermined objective
     });
 
     // Handle mathematical operations (simple implementation)
-    content = content.replace(/\{\{math ([\d.]+) '([+\-*/])' ([\d.]+) '\*' ([\d.]+)\}\}/g, (match: string, a: string, op: string, b: string, c: string) => {
+    content = content.replace(/\{\{math ([\d.]+) '([+\-*/])' ([\d.]+) '\*' ([\d.]+)\}\}/g, (_match: string, a: string, op: string, b: string, c: string) => {
       const numA = parseFloat(a);
       const numB = parseFloat(b);
       const numC = parseFloat(c);

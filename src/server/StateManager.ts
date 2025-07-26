@@ -35,6 +35,12 @@ export class StateManager {
   /** Index mapping project IDs to their file paths for fast lookups */
   private projectsIndex: Map<string, string> = new Map(); // projectId -> filePath
 
+  /** Flag to track initialization status */
+  private initialized: boolean = false;
+  
+  /** Promise to track initialization completion */
+  private initPromise: Promise<void>;
+
   /**
    * Creates a new StateManager instance
    * 
@@ -50,12 +56,24 @@ export class StateManager {
    *   autoBackup: true,
    *   enableLogging: true
    * });
+   * await stateManager.ensureInitialized();
    * ```
    */
   constructor(config: DevelopmentFlowConfig) {
     this.config = config;
     this.stateDir = path.join(config.projectsDir, 'states');
-    this.initializeStateManager();
+    this.initPromise = this.initializeStateManager();
+  }
+  
+  /**
+   * Ensures the state manager is properly initialized
+   * 
+   * @returns Promise that resolves when initialization is complete
+   */
+  public async ensureInitialized(): Promise<void> {
+    if (!this.initialized) {
+      await this.initPromise;
+    }
   }
 
   /**
@@ -71,6 +89,7 @@ export class StateManager {
     try {
       await ensureDir(this.stateDir);
       await this.loadProjectsIndex();
+      this.initialized = true;
       logger.info('State manager initialization completed');
     } catch (error) {
       logger.error(`State manager initialization failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -132,6 +151,8 @@ export class StateManager {
    * ```
    */
   public async saveProjectState(project: ProjectState): Promise<void> {
+    await this.ensureInitialized();
+    
     try {
       const fileName = `${project.id}.json`;
       const filePath = path.join(this.stateDir, fileName);
@@ -181,6 +202,8 @@ export class StateManager {
    * ```
    */
   public async loadProjectState(projectId: string): Promise<ProjectState | null> {
+    await this.ensureInitialized();
+    
     try {
       const filePath = this.projectsIndex.get(projectId);
       if (!filePath) {
@@ -556,7 +579,7 @@ export class StateManager {
           return null;
         }
         
-        backupFile = projectBackups[0];
+        backupFile = projectBackups[0]!;
       }
       
       const backupPath = path.join(backupDir, backupFile);
@@ -570,7 +593,7 @@ export class StateManager {
       // Restore project state
       await this.saveProjectState(project);
       
-      logger.info(`Project state restored: ${projectId} from ${backupFile}`);
+      logger.info(`Project state restored: ${projectId} from ${backupFile!}`);
       return project;
     } catch (error) {
       logger.error(`Failed to restore project state: ${error instanceof Error ? error.message : String(error)}`);

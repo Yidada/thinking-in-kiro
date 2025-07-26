@@ -7,10 +7,9 @@
     "thinking-in-kiro": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc && chmod +x dist/*.js",
-    "dev": "tsx src/index.ts",
-    "prepare": "npm run build",
-    "start": "node dist/index.js"
+    "test": "tsx test/test-server.ts",
+    "start": "ts-node src/index.ts",
+    "build": "tsc"
   },
   "keywords": [
     "mcp",
@@ -26,8 +25,9 @@
   },
   "devDependencies": {
     "@types/node": "^22",
-    "typescript": "^5.3.3",
-    "tsx": "^4.0.0"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.0.0",
+    "typescript": "^5.8.3"
   },
   "files": [
     "dist"

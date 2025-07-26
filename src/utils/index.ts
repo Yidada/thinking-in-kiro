@@ -12,7 +12,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { ProjectState, LogLevel, LogEntry } from '../types/index.js';
+import { ProjectState, LogLevel, LogEntry, DevelopmentFlowConfig, DevelopmentFlowError, DevelopmentPhase } from '../types/index.js';
 
 /**
  * Generates a unique project identifier using timestamp and random string
@@ -54,8 +54,8 @@ export function generateProjectId(): string {
  * console.log(simpleName); // '20241224_001'
  * ```
  */
-export async function generateNumberedDir(baseDir: string, prefix: string = ''): Promise<string> {
-  const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+export async function generateNumberedDir(baseDir: string, prefix = ''): Promise<string> {
+  const date = new Date().toISOString().split('T')[0]!.replace(/-/g, '');
   let counter = 1;
   let dirName: string;
   
@@ -344,8 +344,8 @@ export class Logger {
       timestamp: formatTimestamp(),
       level,
       message,
-      projectId,
-      metadata
+      ...(projectId !== undefined && { projectId }),
+      ...(metadata !== undefined && { metadata })
     };
     
     this.logs.push(entry);
@@ -439,6 +439,180 @@ export class Logger {
    */
   clearLogs(): void {
     this.logs = [];
+  }
+}
+
+/**
+ * Input validation utilities for development flow operations
+ */
+export class InputValidator {
+  /**
+   * Validates project name input
+   */
+  static validateProjectName(name: string): string[] {
+    const errors: string[] = [];
+    
+    if (!name || typeof name !== 'string') {
+      errors.push('Project name is required');
+      return errors;
+    }
+    
+    const trimmed = name.trim();
+    if (trimmed.length === 0) {
+      errors.push('Project name cannot be empty');
+    }
+    
+    if (trimmed.length > 100) {
+      errors.push('Project name cannot exceed 100 characters');
+    }
+    
+    if (!/^[a-zA-Z0-9\s\-_]+$/.test(trimmed)) {
+      errors.push('Project name can only contain letters, numbers, spaces, hyphens, and underscores');
+    }
+    
+    return errors;
+  }
+  
+  /**
+   * Validates and sanitizes text input
+   */
+  static sanitizeText(text: string, maxLength: number = 1000): string {
+    if (typeof text !== 'string') return '';
+    
+    return text
+      .trim()
+      .slice(0, maxLength)
+      .replace(/[<>"'&]/g, (char) => {
+        const entities: Record<string, string> = {
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#x27;',
+          '&': '&amp;'
+        };
+        return entities[char] || char;
+      });
+  }
+  
+  /**
+   * Validates array input
+   */
+  static validateStringArray(arr: any, fieldName: string, maxItems: number = 50): string[] {
+    const errors: string[] = [];
+    
+    if (!Array.isArray(arr)) {
+      errors.push(`${fieldName} must be an array`);
+      return errors;
+    }
+    
+    if (arr.length > maxItems) {
+      errors.push(`${fieldName} cannot exceed ${maxItems} items`);
+    }
+    
+    arr.forEach((item, index) => {
+      if (typeof item !== 'string') {
+        errors.push(`${fieldName}[${index}] must be a string`);
+      } else if (item.trim().length === 0) {
+        errors.push(`${fieldName}[${index}] cannot be empty`);
+      }
+    });
+    
+    return errors;
+  }
+  
+  /**
+   * Validates task ID format
+   */
+  static validateTaskId(taskId: string): string[] {
+    const errors: string[] = [];
+    
+    if (!taskId || typeof taskId !== 'string') {
+      errors.push('Task ID is required');
+      return errors;
+    }
+    
+    if (!/^[a-zA-Z0-9_-]+$/.test(taskId)) {
+      errors.push('Task ID can only contain letters, numbers, hyphens, and underscores');
+    }
+    
+    if (taskId.length > 50) {
+      errors.push('Task ID cannot exceed 50 characters');
+    }
+    
+    return errors;
+  }
+}
+
+/**
+ * Configuration validation utilities
+ */
+export class ConfigValidator {
+  /**
+   * Validates development flow configuration
+   */
+  static validateConfig(config: Partial<DevelopmentFlowConfig>): string[] {
+    const errors: string[] = [];
+    
+    if (!config.baseDir || typeof config.baseDir !== 'string') {
+      errors.push('baseDir is required and must be a string');
+    }
+    
+    if (!config.projectsDir || typeof config.projectsDir !== 'string') {
+      errors.push('projectsDir is required and must be a string');
+    }
+    
+    if (config.maxProjects !== undefined) {
+      if (typeof config.maxProjects !== 'number' || config.maxProjects < 1) {
+        errors.push('maxProjects must be a positive number');
+      }
+    }
+    
+    if (config.logLevel !== undefined) {
+      const validLevels = ['debug', 'info', 'warn', 'error'];
+      if (!validLevels.includes(config.logLevel)) {
+        errors.push(`logLevel must be one of: ${validLevels.join(', ')}`);
+      }
+    }
+    
+    return errors;
+  }
+}
+
+/**
+ * Error response formatting utilities
+ */
+export class ErrorFormatter {
+  /**
+   * Formats error for MCP response
+   */
+  static formatMCPError(error: Error | DevelopmentFlowError): any {
+    const baseError = {
+      error: true,
+      message: error.message,
+      timestamp: formatTimestamp()
+    };
+    
+    if (error instanceof DevelopmentFlowError) {
+      return {
+        ...baseError,
+        code: error.code,
+        phase: error.phase,
+        projectId: error.projectId
+      };
+    }
+    
+    return baseError;
+  }
+  
+  /**
+   * Creates a validation error response
+   */
+  static validationError(errors: string[], phase?: DevelopmentPhase): DevelopmentFlowError {
+    return new DevelopmentFlowError(
+      `Validation failed: ${errors.join(', ')}`,
+      'VALIDATION_ERROR',
+      phase
+    );
   }
 }
 

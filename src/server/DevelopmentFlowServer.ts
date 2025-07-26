@@ -2,6 +2,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  CallToolRequest,
 } from '@modelcontextprotocol/sdk/types.js';
 import {
   DevelopmentPhase,
@@ -9,19 +10,16 @@ import {
   DevelopmentFlowInput,
   DevelopmentFlowResult,
   DevelopmentFlowError,
-  DevelopmentFlowConfig,
-  Task
+  DevelopmentFlowConfig
 } from '../types/index.js';
 import {
   generateProjectId,
-  generateNumberedDir,
-  ensureDir,
-  readJsonFile,
-  writeJsonFile,
   formatTimestamp,
   validateProjectState,
-  sanitizeFileName,
-  logger
+  logger,
+  InputValidator,
+  ConfigValidator,
+  ErrorFormatter
 } from '../utils/index.js';
 import { DocumentGenerator } from './DocumentGenerator.js';
 import { StateManager } from './StateManager.js';
@@ -87,6 +85,15 @@ export class DevelopmentFlowServer {
    * ```
    */
   constructor(config: Partial<DevelopmentFlowConfig> = {}) {
+    // Validate configuration
+    const configErrors = ConfigValidator.validateConfig(config);
+    if (configErrors.length > 0) {
+      throw new DevelopmentFlowError(
+        `Configuration validation failed: ${configErrors.join(', ')}`,
+        'INVALID_CONFIG'
+      );
+    }
+
     this.config = {
       baseDir: process.cwd(),
       templatesDir: path.join(process.cwd(), 'templates'),
@@ -223,11 +230,17 @@ export class DevelopmentFlowServer {
     });
 
     // Tool call handler
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    this.server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
       const { name, arguments: args } = request.params;
       
       if (name !== 'development_flow') {
-        throw new Error(`Unknown tool: ${name}`);
+        const error = new DevelopmentFlowError(`Unknown tool: ${name}`, 'UNKNOWN_TOOL');
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(ErrorFormatter.formatMCPError(error), null, 2)
+          }]
+        };
       }
 
       try {
@@ -244,7 +257,15 @@ export class DevelopmentFlowServer {
         };
       } catch (error) {
         logger.error(`Tool call failed: ${error instanceof Error ? error.message : String(error)}`);
-        throw error;
+        
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(ErrorFormatter.formatMCPError(
+              error instanceof Error ? error : new Error(String(error))
+            ), null, 2)
+          }]
+        };
       }
     });
   }
@@ -329,39 +350,42 @@ export class DevelopmentFlowServer {
    * ```
    */
   private async handleInit(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
-    if (!input.projectName) {
-      throw new DevelopmentFlowError('Project name cannot be empty', 'MISSING_PROJECT_NAME');
+    // Validate project name
+    const nameErrors = InputValidator.validateProjectName(input.projectName || '');
+    if (nameErrors.length > 0) {
+      throw ErrorFormatter.validationError(nameErrors, DevelopmentPhase.INIT);
     }
 
+    const sanitizedName = InputValidator.sanitizeText(input.projectName!, 100);
     const projectId = generateProjectId();
     const timestamp = formatTimestamp();
     
     const projectState: ProjectState = {
       id: projectId,
-      name: input.projectName,
+      name: sanitizedName,
       phase: DevelopmentPhase.INIT,
       createdAt: timestamp,
       updatedAt: timestamp
     };
 
     // Validate project state
-    const errors = validateProjectState(projectState);
-    if (errors.length > 0) {
-      throw new DevelopmentFlowError(
-        `Project state validation failed: ${errors.join(', ')}`,
-        'VALIDATION_ERROR'
-      );
+    const stateErrors = validateProjectState(projectState);
+    if (stateErrors.length > 0) {
+      throw ErrorFormatter.validationError(stateErrors, DevelopmentPhase.INIT);
     }
 
+    // Ensure state manager is initialized
+    await this.stateManager.ensureInitialized();
+    
     // Save project state
     await this.stateManager.saveProjectState(projectState);
     this.currentProject = projectState;
 
-    logger.info(`Project initialized successfully: ${input.projectName} (${projectId})`);
+    logger.info(`Project initialized successfully: ${sanitizedName} (${projectId})`);
 
     return {
       success: true,
-      message: `Project "${input.projectName}" initialized successfully`,
+      message: `Project "${sanitizedName}" initialized successfully`,
       projectId,
       phase: DevelopmentPhase.INIT,
       nextSteps: ['Proceed with requirement analysis (action: requirement)']
@@ -396,25 +420,68 @@ export class DevelopmentFlowServer {
       throw new DevelopmentFlowError('Please initialize project first', 'NO_CURRENT_PROJECT');
     }
 
+    const errors: string[] = [];
+
+    // Validate and sanitize description
+    if (input.description) {
+      this.currentProject.description = InputValidator.sanitizeText(input.description, 2000);
+    }
+
+    // Validate requirements array
+    if (input.requirements) {
+      const reqErrors = InputValidator.validateStringArray(input.requirements, 'requirements');
+      if (reqErrors.length > 0) {
+        errors.push(...reqErrors);
+      } else {
+        this.currentProject.requirements = input.requirements.map(req => 
+          InputValidator.sanitizeText(req, 500)
+        );
+      }
+    }
+
+    // Validate functional requirements
+    if (input.functionalRequirements) {
+      const funcErrors = InputValidator.validateStringArray(input.functionalRequirements, 'functionalRequirements');
+      if (funcErrors.length > 0) {
+        errors.push(...funcErrors);
+      } else {
+        this.currentProject.functionalRequirements = input.functionalRequirements.map(req =>
+          InputValidator.sanitizeText(req, 500)
+        );
+      }
+    }
+
+    // Validate technical requirements
+    if (input.technicalRequirements) {
+      const techErrors = InputValidator.validateStringArray(input.technicalRequirements, 'technicalRequirements');
+      if (techErrors.length > 0) {
+        errors.push(...techErrors);
+      } else {
+        this.currentProject.technicalRequirements = input.technicalRequirements.map(req =>
+          InputValidator.sanitizeText(req, 500)
+        );
+      }
+    }
+
+    // Validate acceptance criteria
+    if (input.acceptanceCriteria) {
+      const acErrors = InputValidator.validateStringArray(input.acceptanceCriteria, 'acceptanceCriteria');
+      if (acErrors.length > 0) {
+        errors.push(...acErrors);
+      } else {
+        this.currentProject.acceptanceCriteria = input.acceptanceCriteria.map(criteria =>
+          InputValidator.sanitizeText(criteria, 500)
+        );
+      }
+    }
+
+    if (errors.length > 0) {
+      throw ErrorFormatter.validationError(errors, DevelopmentPhase.REQUIREMENT);
+    }
+
     // Update project state
     this.currentProject.phase = DevelopmentPhase.REQUIREMENT;
     this.currentProject.updatedAt = formatTimestamp();
-    
-    if (input.description) {
-      this.currentProject.description = input.description;
-    }
-    if (input.requirements) {
-      this.currentProject.requirements = input.requirements;
-    }
-    if (input.functionalRequirements) {
-      this.currentProject.functionalRequirements = input.functionalRequirements;
-    }
-    if (input.technicalRequirements) {
-      this.currentProject.technicalRequirements = input.technicalRequirements;
-    }
-    if (input.acceptanceCriteria) {
-      this.currentProject.acceptanceCriteria = input.acceptanceCriteria;
-    }
 
     // Save state
     await this.stateManager.saveProjectState(this.currentProject);
@@ -632,7 +699,7 @@ export class DevelopmentFlowServer {
    * console.log(result.completedTasks); // Number of completed tasks
    * ```
    */
-  private async handleStatus(input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
+  private async handleStatus(_input: DevelopmentFlowInput): Promise<DevelopmentFlowResult> {
     if (!this.currentProject) {
       throw new DevelopmentFlowError('Please initialize project first', 'NO_CURRENT_PROJECT');
     }
@@ -700,8 +767,25 @@ export class DevelopmentFlowServer {
       throw new DevelopmentFlowError('Please initialize project first', 'NO_CURRENT_PROJECT');
     }
 
-    if (!input.taskId) {
-      throw new DevelopmentFlowError('Please provide task ID', 'MISSING_TASK_ID');
+    // Validate task ID
+    const taskIdErrors = InputValidator.validateTaskId(input.taskId || '');
+    if (taskIdErrors.length > 0) {
+      throw ErrorFormatter.validationError(taskIdErrors, DevelopmentPhase.TASK_COMPLETE);
+    }
+
+    const sanitizedTaskId = InputValidator.sanitizeText(input.taskId!, 50);
+
+    // Verify task exists in project
+    if (this.currentProject.tasks) {
+      const taskExists = this.currentProject.tasks.some(task => task.id === sanitizedTaskId);
+      if (!taskExists) {
+        throw new DevelopmentFlowError(
+          `Task ID '${sanitizedTaskId}' does not exist in project`,
+          'TASK_NOT_FOUND',
+          DevelopmentPhase.TASK_COMPLETE,
+          this.currentProject.id
+        );
+      }
     }
 
     // Update task status
@@ -709,8 +793,8 @@ export class DevelopmentFlowServer {
       this.currentProject.completedTasks = [];
     }
     
-    if (!this.currentProject.completedTasks.includes(input.taskId)) {
-      this.currentProject.completedTasks.push(input.taskId);
+    if (!this.currentProject.completedTasks.includes(sanitizedTaskId)) {
+      this.currentProject.completedTasks.push(sanitizedTaskId);
     }
 
     this.currentProject.phase = DevelopmentPhase.TASK_COMPLETE;
@@ -719,11 +803,11 @@ export class DevelopmentFlowServer {
     // Save state
     await this.stateManager.saveProjectState(this.currentProject);
     
-    logger.info(`Task completed: ${input.taskId}`);
+    logger.info(`Task completed: ${sanitizedTaskId}`);
 
     return {
       success: true,
-      message: `Task ${input.taskId} completed`,
+      message: `Task ${sanitizedTaskId} completed`,
       projectId: this.currentProject.id,
       phase: DevelopmentPhase.TASK_COMPLETE,
       nextSteps: ['Continue executing other tasks or complete project (action: finish)']
