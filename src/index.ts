@@ -16,6 +16,7 @@
 
 import { DevelopmentFlowServer } from './server/DevelopmentFlowServer.js';
 import { logger } from './utils/index.js';
+import path from 'path';
 
 /**
  * Main application entry point
@@ -44,6 +45,7 @@ async function main(): Promise<void> {
     // Create server instance with production configuration
     const server = new DevelopmentFlowServer({
       baseDir: process.cwd(),        // Use current working directory as base
+      projectsDir: process.env.PROJECTS_DIR || path.join('/tmp', '.dev'), // Projects directory
       enableLogging: true,           // Enable comprehensive logging
       logLevel: 'info',             // Set appropriate log level for production
       autoBackup: true              // Enable automatic project backups
